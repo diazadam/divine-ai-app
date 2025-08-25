@@ -1,0 +1,291 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(210, 25%, 7.8431%);
+  --card: hsl(180, 6.6667%, 97.0588%);
+  --card-foreground: hsl(210, 25%, 7.8431%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 25%, 7.8431%);
+  --primary: hsl(203.8863, 88.2845%, 53.1373%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 25%, 7.8431%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(240, 1.9608%, 90%);
+  --muted-foreground: hsl(210, 25%, 7.8431%);
+  --accent: hsl(211.5789, 51.3514%, 92.7451%);
+  --accent-foreground: hsl(203.8863, 88.2845%, 53.1373%);
+  --destructive: hsl(356.3033, 90.5579%, 54.3137%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(201.4286, 30.4348%, 90.9804%);
+  --input: hsl(200, 23.0769%, 97.4510%);
+  --ring: hsl(202.8169, 89.1213%, 53.1373%);
+  --chart-1: hsl(203.8863, 88.2845%, 53.1373%);
+  --chart-2: hsl(159.7826, 100%, 36.0784%);
+  --chart-3: hsl(42.0290, 92.8251%, 56.2745%);
+  --chart-4: hsl(147.1429, 78.5047%, 41.9608%);
+  --chart-5: hsl(341.4894, 75.2000%, 50.9804%);
+  --sidebar: hsl(180, 6.6667%, 97.0588%);
+  --sidebar-foreground: hsl(210, 25%, 7.8431%);
+  --sidebar-primary: hsl(203.8863, 88.2845%, 53.1373%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(211.5789, 51.3514%, 92.7451%);
+  --sidebar-accent-foreground: hsl(203.8863, 88.2845%, 53.1373%);
+  --sidebar-border: hsl(205.0000, 25.0000%, 90.5882%);
+  --sidebar-ring: hsl(202.8169, 89.1213%, 53.1373%);
+  --font-sans: Inter, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 1.3rem;
+  
+  /* Divine AI Color Palette */
+  --celestial-900: hsl(217, 71%, 14%);
+  --celestial-800: hsl(221, 83%, 30%);
+  --celestial-700: hsl(221, 83%, 53%);
+  --celestial-600: hsl(217, 91%, 60%);
+  --divine-600: hsl(43, 96%, 56%);
+  --divine-500: hsl(48, 100%, 67%);
+  --divine-400: hsl(54, 100%, 68%);
+  --sacred-700: hsl(271, 81%, 56%);
+  --sacred-600: hsl(276, 83%, 66%);
+  --sacred-500: hsl(279, 84%, 76%);
+  
+  /* Gradients */
+  --divine-gradient: linear-gradient(135deg, hsl(217, 71%, 14%) 0%, hsl(221, 83%, 30%) 50%, hsl(271, 81%, 56%) 100%);
+  --gold-gradient: linear-gradient(45deg, hsl(43, 96%, 56%), hsl(48, 100%, 67%));
+  --glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
+.dark {
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(200, 6.6667%, 91.1765%);
+  --card: hsl(228, 9.8039%, 10%);
+  --card-foreground: hsl(0, 0%, 85.0980%);
+  --popover: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(200, 6.6667%, 91.1765%);
+  --primary: hsl(203.7736, 87.6033%, 52.5490%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(195.0000, 15.3846%, 94.9020%);
+  --secondary-foreground: hsl(210, 25%, 7.8431%);
+  --muted: hsl(0, 0%, 9.4118%);
+  --muted-foreground: hsl(210, 3.3898%, 46.2745%);
+  --accent: hsl(205.7143, 70%, 7.8431%);
+  --accent-foreground: hsl(203.7736, 87.6033%, 52.5490%);
+  --destructive: hsl(356.3033, 90.5579%, 54.3137%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 5.2632%, 14.9020%);
+  --input: hsl(207.6923, 27.6596%, 18.4314%);
+  --ring: hsl(202.8169, 89.1213%, 53.1373%);
+  --chart-1: hsl(203.8863, 88.2845%, 53.1373%);
+  --chart-2: hsl(159.7826, 100%, 36.0784%);
+  --chart-3: hsl(42.0290, 92.8251%, 56.2745%);
+  --chart-4: hsl(147.1429, 78.5047%, 41.9608%);
+  --chart-5: hsl(341.4894, 75.2000%, 50.9804%);
+  --sidebar: hsl(228, 9.8039%, 10%);
+  --sidebar-foreground: hsl(0, 0%, 85.0980%);
+  --sidebar-primary: hsl(202.8169, 89.1213%, 53.1373%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(205.7143, 70%, 7.8431%);
+  --sidebar-accent-foreground: hsl(203.7736, 87.6033%, 52.5490%);
+  --sidebar-border: hsl(205.7143, 15.7895%, 26.0784%);
+  --sidebar-ring: hsl(202.8169, 89.1213%, 53.1373%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+}
+
+/* Divine AI Custom Styles */
+.bg-divine-gradient {
+  background: var(--divine-gradient);
+}
+
+.bg-gold-gradient {
+  background: var(--gold-gradient);
+}
+
+.bg-glass-gradient {
+  background: var(--glass-gradient);
+}
+
+.glass-effect {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.floating-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-20px); 
+  }
+}
+
+.particle-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--divine-400);
+  border-radius: 50%;
+  animation: particle-float 10s infinite ease-in-out;
+}
+
+@keyframes particle-float {
+  0%, 100% { 
+    transform: translateY(100vh) translateX(0); 
+    opacity: 0; 
+  }
+  10% { 
+    opacity: 1; 
+  }
+  90% { 
+    opacity: 1; 
+  }
+}
+
+.glow-text {
+  text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(251, 191, 36, 0.4) 50%, 
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.premium-shadow {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 30px rgba(124, 58, 237, 0.1);
+}
+
+/* Font families */
+.font-display {
+  font-family: var(--font-sans);
+}
+
+.font-scripture {
+  font-family: var(--font-serif);
+}
+
+/* Tailwind custom utilities */
+@layer utilities {
+  .text-celestial-900 { color: var(--celestial-900); }
+  .text-celestial-800 { color: var(--celestial-800); }
+  .text-celestial-700 { color: var(--celestial-700); }
+  .text-celestial-600 { color: var(--celestial-600); }
+  .text-divine-600 { color: var(--divine-600); }
+  .text-divine-500 { color: var(--divine-500); }
+  .text-divine-400 { color: var(--divine-400); }
+  .text-sacred-700 { color: var(--sacred-700); }
+  .text-sacred-600 { color: var(--sacred-600); }
+  .text-sacred-500 { color: var(--sacred-500); }
+  
+  .bg-celestial-900 { background-color: var(--celestial-900); }
+  .bg-celestial-800 { background-color: var(--celestial-800); }
+  .bg-celestial-700 { background-color: var(--celestial-700); }
+  .bg-celestial-600 { background-color: var(--celestial-600); }
+  .bg-divine-600 { background-color: var(--divine-600); }
+  .bg-divine-500 { background-color: var(--divine-500); }
+  .bg-divine-400 { background-color: var(--divine-400); }
+  .bg-sacred-700 { background-color: var(--sacred-700); }
+  .bg-sacred-600 { background-color: var(--sacred-600); }
+  .bg-sacred-500 { background-color: var(--sacred-500); }
+  
+  .border-celestial-600 { border-color: var(--celestial-600); }
+  .border-divine-600 { border-color: var(--divine-600); }
+  .border-sacred-600 { border-color: var(--sacred-600); }
+  
+  .hover\:bg-celestial-600:hover { background-color: var(--celestial-600); }
+  .hover\:bg-divine-500:hover { background-color: var(--divine-500); }
+  .hover\:bg-sacred-500:hover { background-color: var(--sacred-500); }
+  
+  .hover\:text-divine-400:hover { color: var(--divine-400); }
+  .hover\:text-divine-300:hover { color: hsl(48, 100%, 75%); }
+  .hover\:text-sacred-300:hover { color: hsl(279, 84%, 80%); }
+}
+
+/* Mobile-first responsive styles */
+.hero-title {
+  @apply text-4xl;
+}
+
+@media (min-width: 640px) {
+  .hero-title {
+    @apply text-5xl;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-title {
+    @apply text-6xl;
+  }
+}
+
+/* Responsive breakpoints for animations */
+@media (max-width: 768px) {
+  .floating-animation {
+    animation: float 4s ease-in-out infinite;
+  }
+  
+  .particle {
+    animation-duration: 8s;
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .floating-animation,
+  .particle {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .glass-effect {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.8);
+  }
+}

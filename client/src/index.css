@@ -126,7 +126,7 @@
 }
 
 .floating-animation {
-  animation: float 6s ease-in-out infinite;
+  animation: float 8.1s ease-in-out infinite;
 }
 
 @keyframes float {

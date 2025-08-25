@@ -65,34 +65,40 @@ export default function GeminiChat() {
   };
 
   return (
-    <div className="min-h-screen pt-20 pb-8 bg-white" data-testid="gemini-chat-page">
-      <div className="max-w-4xl mx-auto px-6">
+    <div className="min-h-screen pt-20 pb-8 gradient-bg relative" data-testid="gemini-chat-page">
+      {/* Background Blobs */}
+      <div className="absolute top-20 right-10 w-72 h-72 bg-purple-400 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
+      <div className="absolute bottom-20 left-10 w-96 h-96 bg-pink-400 rounded-full filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '3s' }}></div>
+      
+      <div className="max-w-4xl mx-auto px-6 relative z-10">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-semibold mb-4 text-gray-900">
+          <h1 className="text-5xl font-bold mb-4 text-white floating-animation">
             Personal AI Companion
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-white/90 max-w-2xl mx-auto">
             Your space to relax, explore interests, and have meaningful conversations
           </p>
         </div>
 
         {/* AI Chat Interface */}
-        <div className="chat-container bg-white rounded-2xl border border-gray-200 shadow-sm mb-8">
-          <div className="p-6 border-b border-gray-100">
+        <div className="chat-container glass-card rounded-3xl shadow-2xl mb-8">
+          <div className="p-6 border-b border-white/20">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <Bot className="text-blue-500 mr-2" />
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mr-3">
+                  <Bot className="text-white w-5 h-5" />
+                </div>
                 Personal Assistant
               </h3>
-              <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span className="text-sm text-gray-500">Online</span>
+              <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-green-100">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="text-sm text-green-700 font-medium">Active</span>
               </div>
             </div>
           </div>
 
           {/* Chat Messages */}
-          <div className="p-6 space-y-4 h-80 overflow-y-auto" data-testid="chat-messages">
+          <div className="p-6 space-y-4 h-96 overflow-y-auto bg-gradient-to-b from-transparent to-white/50 rounded-2xl" data-testid="chat-messages">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -141,51 +147,54 @@ export default function GeminiChat() {
           </div>
           
           {/* Input Area */}
-          <div className="p-4 border-t border-gray-100">
+          <div className="p-6 border-t border-white/20">
             <div className="flex space-x-3">
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Share what's on your mind, ask about anything..."
-                className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="flex-1 bg-white/50 border-white/30 backdrop-blur-sm rounded-2xl px-6 py-3 focus:bg-white/70 transition-all"
                 data-testid="chat-input"
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={chatMutation.isPending || !message.trim()}
-                className="px-6 bg-blue-500 hover:bg-blue-600"
+                className="px-8 py-3 btn-gradient rounded-2xl font-semibold shadow-lg"
                 data-testid="send-button"
               >
                 {chatMutation.isPending ? (
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <Send className="w-4 h-4" />
+                  <Send className="w-5 h-5" />
                 )}
               </Button>
             </div>
           </div>
           
           {/* Quick Topics */}
-          <div className="p-6 border-t border-gray-100 bg-gray-50">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Or try one of these topics:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="p-6 bg-gradient-to-b from-white/30 to-white/50 rounded-b-3xl">
+            <h4 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Popular Topics</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                "Tell me about recent scientific discoveries",
-                "Help me plan a weekend getaway",
-                "What's a good book recommendation?",
-                "Creative writing prompts for inspiration",
-                "Healthy recipe ideas for dinner",
-                "Photography tips for beginners",
+                { text: "Recent scientific discoveries", icon: '🔬' },
+                { text: "Plan a weekend getaway", icon: '✈️' },
+                { text: "Book recommendations", icon: '📚' },
+                { text: "Creative writing prompts", icon: '✍️' },
+                { text: "Healthy recipe ideas", icon: '🥘' },
+                { text: "Photography tips", icon: '📷' },
               ].map((topic, index) => (
                 <button
                   key={index}
-                  onClick={() => setMessage(topic)}
-                  className="p-3 bg-white rounded-lg text-left hover:bg-blue-50 hover:border-blue-200 transition-all border border-gray-200 group"
+                  onClick={() => setMessage(topic.text)}
+                  className="p-4 bg-white/70 backdrop-blur-sm rounded-2xl text-left hover:bg-white/90 transition-all border border-white/50 group card-hover"
                   data-testid={`topic-${index}`}
                 >
-                  <div className="text-sm text-gray-700 group-hover:text-blue-700">
-                    {topic}
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{topic.icon}</span>
+                    <div className="text-sm font-medium text-gray-800 group-hover:text-purple-700">
+                      {topic.text}
+                    </div>
                   </div>
                 </button>
               ))}

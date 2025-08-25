@@ -23,15 +23,15 @@ export default function NavigationBar() {
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200" data-testid="navigation-bar">
+    <nav className="fixed top-0 w-full z-50 glass-card border-b border-white/20" data-testid="navigation-bar">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <i className="fas fa-cross text-white text-sm"></i>
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+              <i className="fas fa-cross text-white text-lg"></i>
             </div>
-            <h1 className="text-xl font-semibold text-gray-900">Divine AI</h1>
-            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-medium">BETA</span>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Divine AI</h1>
+            <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full font-semibold shadow-md">BETA</span>
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
@@ -39,8 +39,8 @@ export default function NavigationBar() {
               <button
                 key={item.id}
                 onClick={() => handleNavigation(item.id)}
-                className={`hover:text-blue-600 transition-colors text-gray-600 ${
-                  location === item.id ? 'text-blue-600 font-medium' : ''
+                className={`hover:text-purple-600 transition-all text-gray-700 font-medium ${
+                  location === item.id ? 'text-transparent bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text font-semibold' : ''
                 }`}
                 data-testid={`nav-link-${item.id.replace('/', '')}`}
               >
@@ -53,14 +53,14 @@ export default function NavigationBar() {
             <Button
               variant="ghost"
               size="icon"
-              className="p-2 rounded-lg hover:bg-gray-100 transition-all"
+              className="p-2 rounded-xl glass-card hover:scale-110 transition-all"
               data-testid="notifications-button"
             >
-              <Bell className="h-5 w-5 text-gray-600" />
+              <Bell className="h-5 w-5 text-purple-600" />
             </Button>
             
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
+              <User className="h-5 w-5 text-white" />
             </div>
 
             {/* Mobile Menu */}
@@ -71,14 +71,14 @@ export default function NavigationBar() {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="bg-white border-gray-200">
+                <SheetContent side="right" className="glass-card border-white/20">
                   <div className="flex flex-col space-y-4 mt-8">
                     {navItems.map((item) => (
                       <button
                         key={item.id}
                         onClick={() => handleNavigation(item.id)}
-                        className={`text-left px-4 py-3 rounded-lg hover:text-blue-600 hover:bg-gray-50 transition-all flex items-center space-x-3 text-gray-700 ${
-                          location === item.id ? 'text-blue-600 bg-blue-50 font-medium' : ''
+                        className={`text-left px-4 py-3 rounded-xl hover:bg-white/50 transition-all flex items-center space-x-3 text-gray-700 font-medium ${
+                          location === item.id ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 font-semibold' : ''
                         }`}
                         data-testid={`mobile-nav-link-${item.id.replace('/', '')}`}
                       >

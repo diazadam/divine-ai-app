@@ -87,34 +87,41 @@ export default function HeroSection() {
   };
 
   return (
-    <section id="dashboard" className="pt-24 pb-16 bg-white min-h-screen" data-testid="hero-section">
-      <div className="max-w-4xl mx-auto px-6">
+    <section id="dashboard" className="pt-24 pb-16 min-h-screen gradient-bg relative" data-testid="hero-section">
+      {/* Animated Blob Shapes */}
+      <div className="blob-shape blob-1"></div>
+      <div className="blob-shape blob-2"></div>
+      <div className="blob-shape blob-3"></div>
+      
+      <div className="max-w-5xl mx-auto px-6 relative z-10">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-semibold mb-4 text-gray-900 floating-animation">
+          <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white floating-animation">
             Divine AI
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-            Your AI-powered pastoral assistant for sermon preparation, scripture study, and ministry enhancement.
+          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 font-light">
+            Transform your ministry with AI-powered tools for extraordinary spiritual impact
           </p>
         </div>
 
         {/* AI Chat Interface */}
-        <div className="chat-container bg-white rounded-2xl border border-gray-200 shadow-sm">
-          <div className="p-6 border-b border-gray-100">
+        <div className="chat-container glass-card rounded-3xl shadow-2xl">
+          <div className="p-6 border-b border-white/20">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <Bot className="text-blue-500 mr-2" />
-                Divine AI Assistant
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mr-3">
+                  <Bot className="text-white w-5 h-5" />
+                </div>
+                Divine Assistant
               </h3>
-              <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span className="text-sm text-gray-500">Online</span>
+              <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-green-100">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="text-sm text-green-700 font-medium">Active</span>
               </div>
             </div>
           </div>
 
           {/* Chat Messages */}
-          <div className="p-6 space-y-4 h-80 overflow-y-auto" data-testid="chat-messages">
+          <div className="p-6 space-y-4 h-96 overflow-y-auto bg-gradient-to-b from-transparent to-white/50 rounded-2xl" data-testid="chat-messages">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -123,8 +130,8 @@ export default function HeroSection() {
                 }`}
               >
                 {msg.type === 'ai' && (
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-white" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <Bot className="w-5 h-5 text-white" />
                   </div>
                 )}
                 
@@ -139,8 +146,8 @@ export default function HeroSection() {
                 </div>
                 
                 {msg.type === 'user' && (
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <User className="w-5 h-5 text-white" />
                   </div>
                 )}
               </div>
@@ -148,14 +155,14 @@ export default function HeroSection() {
             
             {chatMutation.isPending && (
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-white" />
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse">
+                  <Bot className="w-5 h-5 text-white" />
                 </div>
-                <div className="ai-message p-3">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="ai-message p-4">
+                  <div className="flex space-x-2">
+                    <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce"></div>
+                    <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
@@ -163,49 +170,52 @@ export default function HeroSection() {
           </div>
           
           {/* Input Area */}
-          <div className="p-4 border-t border-gray-100">
+          <div className="p-6 border-t border-white/20">
             <div className="flex space-x-3">
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Message Divine AI..."
-                className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Ask me anything about ministry, sermons, or scripture..."
+                className="flex-1 bg-white/50 border-white/30 backdrop-blur-sm rounded-2xl px-6 py-3 focus:bg-white/70 transition-all"
                 data-testid="chat-input"
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={chatMutation.isPending || !message.trim()}
-                className="px-6 bg-blue-500 hover:bg-blue-600"
+                className="px-8 py-3 btn-gradient rounded-2xl font-semibold shadow-lg"
                 data-testid="send-button"
               >
                 {chatMutation.isPending ? (
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <Send className="w-4 h-4" />
+                  <Send className="w-5 h-5" />
                 )}
               </Button>
             </div>
           </div>
           
           {/* Quick Suggestions */}
-          <div className="p-6 border-t border-gray-100 bg-gray-50">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Try asking about:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="p-6 bg-gradient-to-b from-white/30 to-white/50 rounded-b-3xl">
+            <h4 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Quick Actions</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { type: 'sermon_outline', text: 'Create a sermon outline on faith and perseverance' },
-                { type: 'semantic_search', text: 'Find verses about hope and strength' },
-                { type: 'illustrations', text: 'Generate sermon illustrations about overcoming adversity' },
-                { type: 'pastoral_guidance', text: 'Provide guidance for supporting congregation members' }
+                { type: 'sermon_outline', text: 'Create a sermon outline on faith', icon: '📖' },
+                { type: 'semantic_search', text: 'Find verses about hope', icon: '🔍' },
+                { type: 'illustrations', text: 'Generate sermon illustrations', icon: '🎨' },
+                { type: 'pastoral_guidance', text: 'Get pastoral guidance', icon: '💡' }
               ].map((action, index) => (
                 <button
                   key={index}
                   onClick={() => setMessage(action.text)}
-                  className="p-3 bg-white rounded-lg text-left hover:bg-blue-50 hover:border-blue-200 transition-all border border-gray-200 group"
+                  className="p-4 bg-white/70 backdrop-blur-sm rounded-2xl text-left hover:bg-white/90 transition-all border border-white/50 group card-hover"
                   data-testid={`action-${action.type}`}
                 >
-                  <div className="text-sm text-gray-700 group-hover:text-blue-700">
-                    {action.text.length > 55 ? action.text.substring(0, 52) + '...' : action.text}
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{action.icon}</span>
+                    <div className="text-sm font-medium text-gray-800 group-hover:text-purple-700">
+                      {action.text}
+                    </div>
                   </div>
                 </button>
               ))}

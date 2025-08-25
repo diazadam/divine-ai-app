@@ -76,14 +76,18 @@ export default function MenuCarousel() {
   };
 
   return (
-    <section className="py-20 bg-gray-50" data-testid="menu-carousel">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-20 gradient-bg-primary relative overflow-hidden" data-testid="menu-carousel">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-purple-400 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-400 rounded-full filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
+      
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 text-gray-900">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-white">
             Ministry Toolkit
           </h2>
-          <p className="text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-            Choose your tool and transform your ministry with AI-powered solutions
+          <p className="text-xl lg:text-2xl text-white/90 max-w-3xl mx-auto px-4 font-light">
+            Powerful AI tools designed to amplify your spiritual impact
           </p>
         </div>
 
@@ -102,31 +106,31 @@ export default function MenuCarousel() {
                       className="absolute inset-0 rounded-3xl bg-cover bg-center"
                       style={{ backgroundImage: `url(${card.image})` }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-800 opacity-80 rounded-3xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 opacity-90 rounded-3xl"></div>
                     </div>
 
                     {/* Content */}
                     <div className="relative z-10 h-full flex flex-col justify-end p-8 lg:p-12">
-                      <div className="bg-black/40 backdrop-blur-md rounded-2xl p-6 lg:p-8 border border-white/20">
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                      <div className="glass-dark rounded-3xl p-8 lg:p-12 border border-white/20">
+                        <div className="flex items-center space-x-4 mb-6">
+                          <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm shadow-xl">
                             {card.icon}
                           </div>
-                          <h3 className="text-2xl lg:text-3xl font-bold text-white">
+                          <h3 className="text-3xl lg:text-4xl font-bold text-white">
                             {card.title}
                           </h3>
                         </div>
                         
-                        <p className="text-gray-200 text-lg mb-6 leading-relaxed">
+                        <p className="text-gray-100 text-xl mb-8 leading-relaxed">
                           {card.description}
                         </p>
                         
                         <Link href={card.route}>
                           <button 
-                            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-xl px-8 py-3 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                            className="bg-white text-purple-700 hover:bg-white/90 rounded-2xl px-10 py-4 font-bold transition-all duration-300 transform hover:scale-105 shadow-2xl"
                             data-testid={`card-link-${card.id}`}
                           >
-                            Explore Tool
+                            Launch Tool →
                           </button>
                         </Link>
                       </div>
@@ -140,18 +144,18 @@ export default function MenuCarousel() {
           {/* Navigation Buttons */}
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 backdrop-blur-md rounded-full p-3 text-white transition-all duration-300"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 glass-dark hover:scale-110 rounded-full p-4 text-white transition-all duration-300 shadow-2xl"
             data-testid="carousel-prev"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-8 h-8" />
           </button>
           
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 backdrop-blur-md rounded-full p-3 text-white transition-all duration-300"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 glass-dark hover:scale-110 rounded-full p-4 text-white transition-all duration-300 shadow-2xl"
             data-testid="carousel-next"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-8 h-8" />
           </button>
         </div>
 
@@ -163,8 +167,8 @@ export default function MenuCarousel() {
               onClick={() => goToSlide(index)}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 index === currentIndex 
-                  ? 'bg-blue-500 scale-125' 
-                  : 'bg-gray-300 hover:bg-gray-400'
+                  ? 'bg-white scale-150 shadow-lg' 
+                  : 'bg-white/40 hover:bg-white/60'
               }`}
               data-testid={`carousel-dot-${index}`}
             />

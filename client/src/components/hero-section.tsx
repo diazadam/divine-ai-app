@@ -108,7 +108,7 @@ export default function HeroSection() {
                 </h3>
                 <div className="flex space-x-2">
                   <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
-                  <span className="text-sm text-gray-400 font-mono">OPERATIONAL</span>
+                  <span className="text-sm text-gray-400">OPERATIONAL</span>
                 </div>
               </div>
               
@@ -184,10 +184,10 @@ export default function HeroSection() {
                     className="glass-effect p-4 rounded-lg text-left hover:bg-white/10 transition-all group border border-white/5 hover:border-divine-500/30"
                     data-testid={`action-${action.type}`}
                   >
-                    <div className="text-xs text-divine-400 font-semibold mb-1 tracking-wider">
+                    <div className="text-xs text-divine-400 font-bold mb-1 tracking-wide uppercase">
                       {action.category}
                     </div>
-                    <div className="text-sm text-gray-200 leading-tight">
+                    <div className="text-sm text-gray-100 leading-tight font-medium">
                       {action.text.length > 60 ? action.text.substring(0, 57) + '...' : action.text}
                     </div>
                   </button>

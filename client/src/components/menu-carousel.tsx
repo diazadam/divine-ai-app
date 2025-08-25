@@ -76,13 +76,13 @@ export default function MenuCarousel() {
   };
 
   return (
-    <section className="py-20 relative z-10" data-testid="menu-carousel">
+    <section className="py-20 bg-gray-50" data-testid="menu-carousel">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-divine-500 to-sacred-500 bg-clip-text text-transparent">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 text-gray-900">
             Ministry Toolkit
           </h2>
-          <p className="text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto px-4">
+          <p className="text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4">
             Choose your tool and transform your ministry with AI-powered solutions
           </p>
         </div>
@@ -102,7 +102,7 @@ export default function MenuCarousel() {
                       className="absolute inset-0 rounded-3xl bg-cover bg-center"
                       style={{ backgroundImage: `url(${card.image})` }}
                     >
-                      <div className={`absolute inset-0 bg-gradient-to-r ${card.gradient} opacity-80 rounded-3xl`}></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-800 opacity-80 rounded-3xl"></div>
                     </div>
 
                     {/* Content */}
@@ -163,8 +163,8 @@ export default function MenuCarousel() {
               onClick={() => goToSlide(index)}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 index === currentIndex 
-                  ? 'bg-divine-500 scale-125' 
-                  : 'bg-white/30 hover:bg-white/50'
+                  ? 'bg-blue-500 scale-125' 
+                  : 'bg-gray-300 hover:bg-gray-400'
               }`}
               data-testid={`carousel-dot-${index}`}
             />

@@ -42,22 +42,15 @@
   --font-mono: Menlo, monospace;
   --radius: 1.3rem;
   
-  /* Divine AI Color Palette */
-  --celestial-900: hsl(217, 71%, 14%);
-  --celestial-800: hsl(221, 83%, 30%);
-  --celestial-700: hsl(221, 83%, 53%);
-  --celestial-600: hsl(217, 91%, 60%);
-  --divine-600: hsl(43, 96%, 56%);
-  --divine-500: hsl(48, 100%, 67%);
-  --divine-400: hsl(54, 100%, 68%);
-  --sacred-700: hsl(271, 81%, 56%);
-  --sacred-600: hsl(276, 83%, 66%);
-  --sacred-500: hsl(279, 84%, 76%);
-  
-  /* Gradients */
-  --divine-gradient: linear-gradient(135deg, hsl(217, 71%, 14%) 0%, hsl(221, 83%, 30%) 50%, hsl(271, 81%, 56%) 100%);
-  --gold-gradient: linear-gradient(45deg, hsl(43, 96%, 56%), hsl(48, 100%, 67%));
-  --glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  /* Clean Gemini-inspired Colors */
+  --primary-blue: hsl(210, 100%, 50%);
+  --primary-blue-light: hsl(210, 100%, 60%);
+  --primary-blue-dark: hsl(210, 100%, 40%);
+  --text-primary: hsl(0, 0%, 10%);
+  --text-secondary: hsl(0, 0%, 45%);
+  --surface: hsl(0, 0%, 98%);
+  --surface-variant: hsl(0, 0%, 95%);
+  --border-light: hsl(0, 0%, 90%);
 }
 
 .dark {
@@ -108,23 +101,29 @@
   }
 }
 
-/* Divine AI Custom Styles */
-.bg-divine-gradient {
-  background: var(--divine-gradient);
+/* Clean Gemini-inspired Styles */
+.chat-container {
+  max-width: 768px;
+  margin: 0 auto;
 }
 
-.bg-gold-gradient {
-  background: var(--gold-gradient);
+.message-bubble {
+  max-width: 80%;
+  word-wrap: break-word;
 }
 
-.bg-glass-gradient {
-  background: var(--glass-gradient);
+.user-message {
+  background: var(--primary-blue);
+  color: white;
+  margin-left: auto;
+  border-radius: 18px 18px 4px 18px;
 }
 
-.glass-effect {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.ai-message {
+  background: var(--surface-variant);
+  color: var(--text-primary);
+  margin-right: auto;
+  border-radius: 18px 18px 18px 4px;
 }
 
 .floating-animation {
@@ -136,7 +135,7 @@
     transform: translateY(0px); 
   }
   50% { 
-    transform: translateY(-20px); 
+    transform: translateY(-10px); 
   }
 }
 

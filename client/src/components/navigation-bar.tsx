@@ -23,15 +23,15 @@ export default function NavigationBar() {
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 glass-effect" data-testid="navigation-bar">
+    <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200" data-testid="navigation-bar">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="bg-gold-gradient p-2 rounded-xl">
-              <i className="fas fa-cross text-celestial-900 text-xl"></i>
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-cross text-white text-sm"></i>
             </div>
-            <h1 className="text-2xl font-bold glow-text shimmer-text">Divine AI</h1>
-            <span className="text-xs bg-sacred-600 px-2 py-1 rounded-full">BETA</span>
+            <h1 className="text-xl font-semibold text-gray-900">Divine AI</h1>
+            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-medium">BETA</span>
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
@@ -39,8 +39,8 @@ export default function NavigationBar() {
               <button
                 key={item.id}
                 onClick={() => handleNavigation(item.id)}
-                className={`hover:text-divine-400 transition-colors ${
-                  location === item.id ? 'text-divine-400' : ''
+                className={`hover:text-blue-600 transition-colors text-gray-600 ${
+                  location === item.id ? 'text-blue-600 font-medium' : ''
                 }`}
                 data-testid={`nav-link-${item.id.replace('/', '')}`}
               >
@@ -53,14 +53,14 @@ export default function NavigationBar() {
             <Button
               variant="ghost"
               size="icon"
-              className="p-2 rounded-lg glass-effect hover:bg-white/10 transition-all"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-all"
               data-testid="notifications-button"
             >
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5 text-gray-600" />
             </Button>
             
-            <div className="w-8 h-8 bg-divine-600 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4" />
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <User className="h-4 w-4 text-white" />
             </div>
 
             {/* Mobile Menu */}
@@ -71,14 +71,14 @@ export default function NavigationBar() {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="bg-celestial-900/95 border-white/10">
+                <SheetContent side="right" className="bg-white border-gray-200">
                   <div className="flex flex-col space-y-4 mt-8">
                     {navItems.map((item) => (
                       <button
                         key={item.id}
                         onClick={() => handleNavigation(item.id)}
-                        className={`text-left px-4 py-3 rounded-lg hover:text-divine-400 hover:bg-white/10 transition-all flex items-center space-x-3 ${
-                          location === item.id ? 'text-divine-400 bg-white/5' : ''
+                        className={`text-left px-4 py-3 rounded-lg hover:text-blue-600 hover:bg-gray-50 transition-all flex items-center space-x-3 text-gray-700 ${
+                          location === item.id ? 'text-blue-600 bg-blue-50 font-medium' : ''
                         }`}
                         data-testid={`mobile-nav-link-${item.id.replace('/', '')}`}
                       >

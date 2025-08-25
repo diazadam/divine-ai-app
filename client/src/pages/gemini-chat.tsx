@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Send, User, Bot, Coffee, BookOpen, Music, Camera, Gamepad2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -64,114 +64,131 @@ export default function GeminiChat() {
     }
   };
 
-  const quickTopics = [
-    { icon: <Coffee className="w-4 h-4" />, text: "Favorite coffee recipes", topic: "Tell me about different coffee brewing methods and your favorite recipes" },
-    { icon: <BookOpen className="w-4 h-4" />, text: "Book recommendations", topic: "Can you recommend some great books to read? I enjoy both fiction and non-fiction" },
-    { icon: <Music className="w-4 h-4" />, text: "Music discovery", topic: "Help me discover new music genres and artists I might enjoy" },
-    { icon: <Camera className="w-4 h-4" />, text: "Photography tips", topic: "I'm interested in photography. Can you give me some beginner tips?" },
-    { icon: <Gamepad2 className="w-4 h-4" />, text: "Gaming chat", topic: "Let's talk about video games and what's trending lately" },
-  ];
-
   return (
-    <div className="min-h-screen bg-divine-gradient text-white relative overflow-hidden">
-      {/* Background Effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-celestial-900/50 via-transparent to-sacred-700/30"></div>
-      
-      {/* Header */}
-      <header className="relative z-10 p-6 border-b border-white/10">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2 glow-text">Personal AI Companion</h1>
-          <p className="text-gray-300">Your space to relax, explore interests, and have meaningful conversations</p>
-        </div>
-      </header>
-
-      <div className="relative z-10 max-w-4xl mx-auto p-6 h-[calc(100vh-200px)] flex flex-col">
-        {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto mb-6 space-y-4" data-testid="chat-messages">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex items-start space-x-3 ${
-                msg.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                msg.type === 'user' ? 'bg-sacred-600' : 'bg-divine-600'
-              }`}>
-                {msg.type === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
-              </div>
-              
-              <div className={`max-w-md lg:max-w-2xl rounded-2xl p-4 ${
-                msg.type === 'user'
-                  ? 'bg-gradient-to-r from-sacred-600/50 to-sacred-700/50 border border-sacred-500/30'
-                  : 'glass-effect'
-              }`}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                <p className="text-xs text-gray-400 mt-2">
-                  {msg.timestamp.toLocaleTimeString()}
-                </p>
-              </div>
-            </div>
-          ))}
-          
-          {chatMutation.isPending && (
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-divine-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <Bot className="w-5 h-5" />
-              </div>
-              <div className="glass-effect rounded-2xl p-4 max-w-md">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-divine-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-divine-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-divine-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                </div>
-              </div>
-            </div>
-          )}
+    <div className="min-h-screen pt-20 pb-8 bg-white" data-testid="gemini-chat-page">
+      <div className="max-w-4xl mx-auto px-6">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-semibold mb-4 text-gray-900">
+            Personal AI Companion
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Your space to relax, explore interests, and have meaningful conversations
+          </p>
         </div>
 
-        {/* Quick Topics */}
-        {messages.length <= 1 && (
-          <div className="mb-6">
-            <p className="text-sm text-gray-400 mb-3">Or try one of these topics:</p>
-            <div className="flex flex-wrap gap-2">
-              {quickTopics.map((topic, index) => (
-                <button
-                  key={index}
-                  onClick={() => setMessage(topic.topic)}
-                  className="glass-effect px-3 py-2 rounded-lg text-sm flex items-center space-x-2 hover:bg-white/10 transition-colors"
-                  data-testid={`quick-topic-${index}`}
-                >
-                  {topic.icon}
-                  <span>{topic.text}</span>
-                </button>
-              ))}
+        {/* AI Chat Interface */}
+        <div className="chat-container bg-white rounded-2xl border border-gray-200 shadow-sm mb-8">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                <Bot className="text-blue-500 mr-2" />
+                Personal Assistant
+              </h3>
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span className="text-sm text-gray-500">Online</span>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Message Input */}
-        <div className="flex-shrink-0">
-          <div className="glass-effect rounded-2xl p-4">
+          {/* Chat Messages */}
+          <div className="p-6 space-y-4 h-80 overflow-y-auto" data-testid="chat-messages">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex items-start space-x-3 ${
+                  msg.type === 'user' ? 'justify-end' : ''
+                }`}
+              >
+                {msg.type === 'ai' && (
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-white" />
+                  </div>
+                )}
+                
+                <div
+                  className={`message-bubble p-3 ${
+                    msg.type === 'user'
+                      ? 'user-message'
+                      : 'ai-message'
+                  }`}
+                >
+                  <p className="text-sm leading-relaxed">{msg.content}</p>
+                </div>
+                
+                {msg.type === 'user' && (
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {chatMutation.isPending && (
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div className="ai-message p-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Input Area */}
+          <div className="p-4 border-t border-gray-100">
             <div className="flex space-x-3">
-              <Textarea
+              <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Share what's on your mind, ask about hobbies, or just chat..."
-                className="flex-1 bg-transparent border-none resize-none text-white placeholder-gray-400 focus:outline-none focus:ring-0"
-                rows={1}
+                placeholder="Share what's on your mind, ask about anything..."
+                className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 data-testid="chat-input"
-                style={{ minHeight: '20px', maxHeight: '120px' }}
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={!message.trim() || chatMutation.isPending}
-                className="bg-gradient-to-r from-divine-600 to-sacred-600 hover:from-divine-500 hover:to-sacred-500 rounded-xl px-4"
-                data-testid="send-message-button"
+                disabled={chatMutation.isPending || !message.trim()}
+                className="px-6 bg-blue-500 hover:bg-blue-600"
+                data-testid="send-button"
               >
-                <Send className="w-4 h-4" />
+                {chatMutation.isPending ? (
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
               </Button>
+            </div>
+          </div>
+          
+          {/* Quick Topics */}
+          <div className="p-6 border-t border-gray-100 bg-gray-50">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Or try one of these topics:</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[
+                "Tell me about recent scientific discoveries",
+                "Help me plan a weekend getaway",
+                "What's a good book recommendation?",
+                "Creative writing prompts for inspiration",
+                "Healthy recipe ideas for dinner",
+                "Photography tips for beginners",
+              ].map((topic, index) => (
+                <button
+                  key={index}
+                  onClick={() => setMessage(topic)}
+                  className="p-3 bg-white rounded-lg text-left hover:bg-blue-50 hover:border-blue-200 transition-all border border-gray-200 group"
+                  data-testid={`topic-${index}`}
+                >
+                  <div className="text-sm text-gray-700 group-hover:text-blue-700">
+                    {topic}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ export default function HeroSection() {
     {
       id: '1',
       type: 'ai',
-      content: "Welcome to the Divine AI Ministry Platform. This advanced theological AI system provides comprehensive ministry support through:\n\n• **Advanced Sermon Architecture** - Multi-layered outlines with exegetical depth and theological precision\n• **Semantic Scripture Analysis** - Intelligent verse discovery based on thematic and conceptual relevance\n• **Narrative Construction** - Professional illustration development for maximum congregational impact\n• **Audio Content Transformation** - Sophisticated podcast script generation with delivery optimization\n• **Visual Media Engineering** - Professional-grade visual prompt development for sermon graphics\n• **Pastoral Intelligence** - Context-aware guidance grounded in biblical scholarship\n\nInitiate your ministry enhancement protocol. What theological or creative challenge requires assistance?",
+      content: "Welcome to the Divine AI Ministry Platform. This advanced theological AI system provides comprehensive ministry support through:\n\n• Advanced Sermon Architecture - Multi-layered outlines with exegetical depth and theological precision\n• Semantic Scripture Analysis - Intelligent verse discovery based on thematic and conceptual relevance\n• Narrative Construction - Professional illustration development for maximum congregational impact\n• Audio Content Transformation - Sophisticated podcast script generation with delivery optimization\n• Visual Media Engineering - Professional-grade visual prompt development for sermon graphics\n• Pastoral Intelligence - Context-aware guidance grounded in biblical scholarship\n\nInitiate your ministry enhancement protocol. What theological or creative challenge requires assistance?",
       timestamp: new Date(),
     }
   ]);
@@ -184,10 +184,10 @@ export default function HeroSection() {
                     className="glass-effect p-4 rounded-lg text-left hover:bg-white/10 transition-all group border border-white/5 hover:border-divine-500/30"
                     data-testid={`action-${action.type}`}
                   >
-                    <div className="text-xs text-divine-400 font-bold mb-1 tracking-wide uppercase">
+                    <div className="text-xs text-divine-400 font-semibold mb-1 tracking-wide uppercase">
                       {action.category}
                     </div>
-                    <div className="text-sm text-gray-100 leading-tight font-medium">
+                    <div className="text-sm text-gray-200 leading-tight">
                       {action.text.length > 60 ? action.text.substring(0, 57) + '...' : action.text}
                     </div>
                   </button>

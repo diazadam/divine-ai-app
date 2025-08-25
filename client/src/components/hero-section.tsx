@@ -19,7 +19,7 @@ export default function HeroSection() {
     {
       id: '1',
       type: 'ai',
-      content: "🙌 Welcome to your AI-powered ministry assistant! I'm equipped with advanced capabilities to help you:\n\n✨ **Create detailed sermon outlines** with biblical insights\n📖 **Search scriptures semantically** - find verses by concept, not just keywords\n🎯 **Generate compelling illustrations** and stories\n🎙️ **Transform sermons into podcast scripts**\n🎨 **Create visual prompts** for stunning sermon graphics\n💬 **Provide pastoral guidance** with scriptural wisdom\n\nWhat aspect of your ministry can I help enhance today?",
+      content: "Welcome to the Divine AI Ministry Platform. This advanced theological AI system provides comprehensive ministry support through:\n\n• **Advanced Sermon Architecture** - Multi-layered outlines with exegetical depth and theological precision\n• **Semantic Scripture Analysis** - Intelligent verse discovery based on thematic and conceptual relevance\n• **Narrative Construction** - Professional illustration development for maximum congregational impact\n• **Audio Content Transformation** - Sophisticated podcast script generation with delivery optimization\n• **Visual Media Engineering** - Professional-grade visual prompt development for sermon graphics\n• **Pastoral Intelligence** - Context-aware guidance grounded in biblical scholarship\n\nInitiate your ministry enhancement protocol. What theological or creative challenge requires assistance?",
       timestamp: new Date(),
     }
   ]);
@@ -104,11 +104,11 @@ export default function HeroSection() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold flex items-center">
                   <Bot className="text-divine-500 mr-2" />
-                  Divine AI Assistant
+                  Ministry Intelligence System
                 </h3>
                 <div className="flex space-x-2">
                   <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
-                  <span className="text-sm text-gray-400">Active</span>
+                  <span className="text-sm text-gray-400 font-mono">OPERATIONAL</span>
                 </div>
               </div>
               
@@ -168,24 +168,28 @@ export default function HeroSection() {
                 )}
               </div>
               
-              {/* Enhanced Quick Action Buttons */}
-              <div className="flex flex-wrap gap-2 mb-6 justify-center">
+              {/* Professional Action Commands */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                 {[
-                  { text: "Create sermon outline about faith during trials", icon: "📝", type: "sermon" },
-                  { text: "Find scripture about hope in difficult times", icon: "📖", type: "scripture" },
-                  { text: "Generate illustrations for a sermon about grace", icon: "💡", type: "illustration" },
-                  { text: "Transform my sermon into a podcast script", icon: "🎙️", type: "podcast" },
-                  { text: "Create visual prompts for Easter sermon", icon: "🎨", type: "visual" },
-                  { text: "I need pastoral guidance about leadership", icon: "💬", type: "guidance" },
+                  { text: "Generate comprehensive sermon architecture for faith resilience", category: "SERMON DEVELOPMENT", type: "sermon" },
+                  { text: "Execute semantic scripture analysis for hope-based themes", category: "BIBLICAL RESEARCH", type: "scripture" },
+                  { text: "Construct narrative illustrations for grace-centered messaging", category: "CONTENT CREATION", type: "illustration" },
+                  { text: "Process sermon content into optimized podcast format", category: "MEDIA PRODUCTION", type: "podcast" },
+                  { text: "Engineer visual prompts for high-impact sermon graphics", category: "DESIGN SYSTEMS", type: "visual" },
+                  { text: "Access pastoral intelligence for leadership strategies", category: "STRATEGIC GUIDANCE", type: "guidance" },
                 ].map((action, index) => (
                   <button
                     key={index}
                     onClick={() => setMessage(action.text)}
-                    className="glass-effect px-3 py-2 rounded-xl text-xs sm:text-sm hover:bg-white/10 transition-all flex items-center space-x-2 hover:scale-105 transform group"
-                    data-testid={`quick-action-${action.type}`}
+                    className="glass-effect p-4 rounded-lg text-left hover:bg-white/10 transition-all group border border-white/5 hover:border-divine-500/30"
+                    data-testid={`action-${action.type}`}
                   >
-                    <span className="group-hover:animate-pulse">{action.icon}</span>
-                    <span className="hidden sm:inline">{action.text.length > 40 ? action.text.substring(0, 37) + '...' : action.text}</span>
+                    <div className="text-xs text-divine-400 font-semibold mb-1 tracking-wider">
+                      {action.category}
+                    </div>
+                    <div className="text-sm text-gray-200 leading-tight">
+                      {action.text.length > 60 ? action.text.substring(0, 57) + '...' : action.text}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -194,7 +198,7 @@ export default function HeroSection() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Ask me to create sermon outlines, find scripture, generate illustrations, or provide pastoral guidance..."
+                  placeholder="Specify your ministry enhancement requirements: sermon architecture, biblical analysis, content development, or strategic guidance..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}

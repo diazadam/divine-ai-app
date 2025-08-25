@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { List, Wand2, Save, Plus, Lightbulb, Mic, Play } from "lucide-react";
+import { List, Wand2, Save, Plus, Lightbulb, Mic, Play, ChevronLeft } from "lucide-react";
 import GlassCard from "@/components/ui/glass-card";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 import type { Sermon } from "@shared/schema";
 
 interface SermonSection {
@@ -84,13 +85,23 @@ export default function SermonPrepWorkspace() {
   };
 
   return (
-    <section id="sermon-prep" className="mb-16 relative z-10" data-testid="sermon-prep-workspace">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-divine-500 to-sacred-500 bg-clip-text text-transparent">
+    <section id="sermon-prep" className="pt-24 pb-16 min-h-screen relative z-10" data-testid="sermon-prep-workspace">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Link href="/">
+            <button className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors group glass-card px-4 py-2 rounded-xl">
+              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium">Back to Home</span>
+            </button>
+          </Link>
+        </div>
+        
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-divine-500 to-sacred-500 bg-clip-text text-transparent">
             Sermon Preparation Workspace
           </h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">Create compelling, biblically-grounded sermons with AI assistance</p>
+          <p className="text-gray-300 max-w-2xl mx-auto px-4">Create compelling, biblically-grounded sermons with AI assistance</p>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

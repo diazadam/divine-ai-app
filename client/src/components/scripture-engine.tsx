@@ -11,8 +11,10 @@ import {
   Copy, 
   Bookmark, 
   Folder, 
-  ArrowRight 
+  ArrowRight,
+  ChevronLeft 
 } from "lucide-react";
+import { Link } from "wouter";
 import GlassCard from "@/components/ui/glass-card";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -52,13 +54,23 @@ export default function ScriptureEngine() {
   };
 
   return (
-    <section id="scripture" className="mb-16 relative z-10" data-testid="scripture-engine">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-divine-500 to-celestial-500 bg-clip-text text-transparent">
+    <section id="scripture" className="pt-24 pb-16 min-h-screen relative z-10" data-testid="scripture-engine">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Link href="/">
+            <button className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors group glass-card px-4 py-2 rounded-xl">
+              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium">Back to Home</span>
+            </button>
+          </Link>
+        </div>
+        
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-divine-500 to-celestial-500 bg-clip-text text-transparent">
             Scripture Search Engine
           </h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">Intelligent biblical cross-reference with AI-powered interpretation</p>
+          <p className="text-gray-300 max-w-2xl mx-auto px-4">Intelligent biblical cross-reference with AI-powered interpretation</p>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

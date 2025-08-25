@@ -93,12 +93,12 @@ export default function HeroSection() {
       <div className="blob-shape blob-2"></div>
       <div className="blob-shape blob-3"></div>
       
-      <div className="max-w-5xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-12">
-          <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white floating-animation">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 text-white floating-animation">
             Divine AI
           </h2>
-          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 font-light">
+          <p className="text-lg sm:text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-6 sm:mb-8 font-light px-4">
             Transform your ministry with AI-powered tools for extraordinary spiritual impact
           </p>
         </div>
@@ -121,7 +121,7 @@ export default function HeroSection() {
           </div>
 
           {/* Chat Messages */}
-          <div className="p-6 space-y-4 h-96 overflow-y-auto bg-gradient-to-b from-transparent to-white/50 rounded-2xl" data-testid="chat-messages">
+          <div className="p-4 sm:p-6 space-y-4 h-80 sm:h-96 overflow-y-auto bg-gradient-to-b from-transparent to-white/50 rounded-2xl" data-testid="chat-messages">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -177,13 +177,13 @@ export default function HeroSection() {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me anything about ministry, sermons, or scripture..."
-                className="flex-1 bg-white/50 border-white/30 backdrop-blur-sm rounded-2xl px-6 py-3 focus:bg-white/70 transition-all"
+                className="flex-1 bg-white/50 border-white/30 backdrop-blur-sm rounded-2xl px-4 sm:px-6 py-3 focus:bg-white/70 transition-all"
                 data-testid="chat-input"
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={chatMutation.isPending || !message.trim()}
-                className="px-8 py-3 btn-gradient rounded-2xl font-semibold shadow-lg"
+                className="px-6 sm:px-8 py-3 btn-gradient rounded-2xl font-semibold shadow-lg"
                 data-testid="send-button"
               >
                 {chatMutation.isPending ? (

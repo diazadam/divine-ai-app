@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, User, Bot, Coffee, BookOpen, Music, Camera, Gamepad2 } from "lucide-react";
+import { Send, User, Bot, Coffee, BookOpen, Music, Camera, Gamepad2, ChevronLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 
 interface ChatMessage {
   id: string;
@@ -66,12 +67,22 @@ export default function GeminiChat() {
 
   return (
     <div className="min-h-screen pt-20 pb-8 gradient-bg relative" data-testid="gemini-chat-page">
+      {/* Back Button */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-6 relative z-20 pt-4">
+        <Link href="/">
+          <button className="flex items-center space-x-2 text-white/80 hover:text-white transition-colors group glass-card px-4 py-2 rounded-xl">
+            <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back to Home</span>
+          </button>
+        </Link>
+      </div>
+      
       {/* Background Blobs */}
       <div className="absolute top-20 right-10 w-72 h-72 bg-purple-400 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-pink-400 rounded-full filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '3s' }}></div>
       
-      <div className="max-w-4xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-5xl font-bold mb-4 text-white floating-animation">
             Personal AI Companion
           </h1>

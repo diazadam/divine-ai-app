@@ -81,12 +81,12 @@ export default function MenuCarousel() {
       <div className="absolute top-0 left-0 w-64 h-64 bg-purple-400 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-400 rounded-full filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
       
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-4 sm:mb-6 text-white">
             Ministry Toolkit
           </h2>
-          <p className="text-xl lg:text-2xl text-white/90 max-w-3xl mx-auto px-4 font-light">
+          <p className="text-lg sm:text-xl lg:text-2xl text-white/90 max-w-3xl mx-auto px-4 font-light">
             Powerful AI tools designed to amplify your spiritual impact
           </p>
         </div>
@@ -111,23 +111,23 @@ export default function MenuCarousel() {
 
                     {/* Content */}
                     <div className="relative z-10 h-full flex flex-col justify-end p-8 lg:p-12">
-                      <div className="glass-dark rounded-3xl p-8 lg:p-12 border border-white/20">
-                        <div className="flex items-center space-x-4 mb-6">
-                          <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm shadow-xl">
+                      <div className="glass-dark rounded-3xl p-6 sm:p-8 lg:p-12 border border-white/20">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+                          <div className="p-3 sm:p-4 bg-white/20 rounded-2xl backdrop-blur-sm shadow-xl">
                             {card.icon}
                           </div>
-                          <h3 className="text-3xl lg:text-4xl font-bold text-white">
+                          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
                             {card.title}
                           </h3>
                         </div>
                         
-                        <p className="text-gray-100 text-xl mb-8 leading-relaxed">
+                        <p className="text-gray-100 text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed">
                           {card.description}
                         </p>
                         
                         <Link href={card.route}>
                           <button 
-                            className="bg-white text-purple-700 hover:bg-white/90 rounded-2xl px-10 py-4 font-bold transition-all duration-300 transform hover:scale-105 shadow-2xl"
+                            className="bg-white text-purple-700 hover:bg-white/90 rounded-2xl px-8 sm:px-10 py-3 sm:py-4 font-bold transition-all duration-300 transform hover:scale-105 shadow-2xl w-full sm:w-auto"
                             data-testid={`card-link-${card.id}`}
                           >
                             Launch Tool →

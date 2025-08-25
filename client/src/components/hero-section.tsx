@@ -19,33 +19,46 @@ export default function HeroSection() {
     {
       id: '1',
       type: 'ai',
-      content: "Welcome! I'm here to help you prepare powerful sermons, create engaging content, and enhance your ministry. What would you like to work on today?",
+      content: "🙌 Welcome to your AI-powered ministry assistant! I'm equipped with advanced capabilities to help you:\n\n✨ **Create detailed sermon outlines** with biblical insights\n📖 **Search scriptures semantically** - find verses by concept, not just keywords\n🎯 **Generate compelling illustrations** and stories\n🎙️ **Transform sermons into podcast scripts**\n🎨 **Create visual prompts** for stunning sermon graphics\n💬 **Provide pastoral guidance** with scriptural wisdom\n\nWhat aspect of your ministry can I help enhance today?",
       timestamp: new Date(),
-    },
-    {
-      id: '2',
-      type: 'user',
-      content: "I need help creating a sermon series about hope during difficult times. Can you help me outline the key themes?",
-      timestamp: new Date(),
-    },
-    {
-      id: '3',
-      type: 'ai',
-      content: "Excellent topic! I'll help you create a powerful 4-part series on hope. Let me suggest some key biblical passages and themes...",
-      timestamp: new Date(),
-    },
+    }
   ]);
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await apiRequest('POST', '/api/chat', { message });
+      // Intelligent AI type detection based on message content
+      let type = '';
+      let context = '';
+      
+      if (message.toLowerCase().includes('sermon') && (message.toLowerCase().includes('outline') || message.toLowerCase().includes('structure'))) {
+        type = 'sermon_outline';
+        context = JSON.stringify({ topic: message, scripture: '' });
+      } else if (message.toLowerCase().includes('scripture') || message.toLowerCase().includes('verse') || message.toLowerCase().includes('bible')) {
+        type = 'semantic_search';
+      } else if (message.toLowerCase().includes('illustration') || message.toLowerCase().includes('story') || message.toLowerCase().includes('example')) {
+        type = 'illustrations';
+        context = JSON.stringify({ theme: message, audience: 'general' });
+      } else if (message.toLowerCase().includes('podcast') || message.toLowerCase().includes('audio')) {
+        type = 'podcast_script';
+      } else if (message.toLowerCase().includes('image') || message.toLowerCase().includes('visual') || message.toLowerCase().includes('graphic')) {
+        type = 'visual_prompts';
+        context = JSON.stringify({ style: 'inspirational' });
+      } else if (message.toLowerCase().includes('guidance') || message.toLowerCase().includes('help') || message.toLowerCase().includes('advice')) {
+        type = 'pastoral_guidance';
+      }
+
+      const response = await apiRequest('POST', '/api/chat', { 
+        message, 
+        context: context || 'This is a pastoral ministry context for sermon preparation and biblical study.',
+        type 
+      });
       return response.json();
     },
     onSuccess: (data) => {
       const aiMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'ai',
-        content: data.response,
+        content: typeof data.response === 'object' ? JSON.stringify(data.response, null, 2) : data.response,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiMessage]);
@@ -155,11 +168,33 @@ export default function HeroSection() {
                 )}
               </div>
               
+              {/* Enhanced Quick Action Buttons */}
+              <div className="flex flex-wrap gap-2 mb-6 justify-center">
+                {[
+                  { text: "Create sermon outline about faith during trials", icon: "📝", type: "sermon" },
+                  { text: "Find scripture about hope in difficult times", icon: "📖", type: "scripture" },
+                  { text: "Generate illustrations for a sermon about grace", icon: "💡", type: "illustration" },
+                  { text: "Transform my sermon into a podcast script", icon: "🎙️", type: "podcast" },
+                  { text: "Create visual prompts for Easter sermon", icon: "🎨", type: "visual" },
+                  { text: "I need pastoral guidance about leadership", icon: "💬", type: "guidance" },
+                ].map((action, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setMessage(action.text)}
+                    className="glass-effect px-3 py-2 rounded-xl text-xs sm:text-sm hover:bg-white/10 transition-all flex items-center space-x-2 hover:scale-105 transform group"
+                    data-testid={`quick-action-${action.type}`}
+                  >
+                    <span className="group-hover:animate-pulse">{action.icon}</span>
+                    <span className="hidden sm:inline">{action.text.length > 40 ? action.text.substring(0, 37) + '...' : action.text}</span>
+                  </button>
+                ))}
+              </div>
+              
               {/* Chat Input */}
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Ask me about sermon preparation, biblical insights, or content creation..."
+                  placeholder="Ask me to create sermon outlines, find scripture, generate illustrations, or provide pastoral guidance..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}

@@ -4,7 +4,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { bibleApiService } from "./services/bible-api";
 import { audioProcessorService } from "./services/audio-processor";
-import { geminiService } from "./services/gemini";
 import { 
   insertSermonSchema, 
   insertPodcastSchema, 
@@ -348,25 +347,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Chat/AI assistance endpoint
+  // Enhanced Chat/AI assistance endpoint with multiple AI capabilities
   app.post("/api/chat", async (req, res) => {
     try {
-      const { message, context } = req.body;
+      const { message, context, type } = req.body;
 
       if (!message) {
         return res.status(400).json({ error: "Message is required" });
       }
 
-      // Create conversational prompt
-      const conversationalPrompt = context ? 
-        `${context}\n\nUser: ${message}\n\nPlease respond in a friendly, conversational way as a helpful personal assistant. Keep responses engaging and natural.` :
-        `Please respond to this message in a friendly, conversational way as a helpful personal assistant: ${message}`;
+      const { 
+        summarizeArticle, 
+        providePastoralGuidance, 
+        generateAdvancedSermonOutline,
+        semanticScriptureSearch,
+        generateSermonIllustrations,
+        generatePodcastScript,
+        generateSermonVisualPrompts
+      } = await import('./services/gemini');
 
-      // Import Gemini service dynamically  
-      const { summarizeArticle } = await import('./services/gemini');
+      let response;
 
-      // Use Gemini for conversational AI responses
-      const response = await summarizeArticle(conversationalPrompt);
+      switch (type) {
+        case 'pastoral_guidance':
+          response = await providePastoralGuidance(message, context);
+          break;
+        case 'sermon_outline':
+          const { topic, scripture } = JSON.parse(context || '{}');
+          response = await generateAdvancedSermonOutline(topic || message, scripture || '');
+          break;
+        case 'semantic_search':
+          response = await semanticScriptureSearch(message, context);
+          break;
+        case 'illustrations':
+          const { theme, audience } = JSON.parse(context || '{}');
+          response = await generateSermonIllustrations(theme || message, audience || 'general');
+          break;
+        case 'podcast_script':
+          response = await generatePodcastScript(message);
+          break;
+        case 'visual_prompts':
+          const { style } = JSON.parse(context || '{}');
+          response = await generateSermonVisualPrompts(message, style || 'inspirational');
+          break;
+        default:
+          // Default conversational response
+          const conversationalPrompt = context ? 
+            `${context}\n\nUser: ${message}\n\nPlease respond in a friendly, conversational way as a helpful personal assistant. Keep responses engaging and natural.` :
+            `Please respond to this message in a friendly, conversational way as a helpful personal assistant: ${message}`;
+          response = await summarizeArticle(conversationalPrompt);
+      }
       
       res.json({ response });
     } catch (error) {

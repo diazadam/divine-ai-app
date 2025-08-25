@@ -142,26 +142,44 @@ export async function generateImage(
     }
 }
 
-// Pastoral AI assistant functions
-export async function generateSermonOutline(topic: string, scripture: string): Promise<any> {
+// Enhanced Pastoral AI assistant functions
+export async function generateAdvancedSermonOutline(topic: string, scripture: string, audienceType?: string, sermonLength?: string, style?: string): Promise<any> {
     try {
-        const systemPrompt = `You are an expert theological AI assistant specializing in sermon preparation. 
-        Create a detailed sermon outline with biblical insights and practical applications.
+        const systemPrompt = `You are an expert theological AI assistant with deep biblical scholarship and pastoral experience. 
+        Create a comprehensive, multi-layered sermon outline that combines exegetical depth with practical application.
+        Consider the audience type, desired length, and preaching style.
         Respond with JSON in this format:
         {
             "outline": {
-                "sections": [
+                "introduction": {
+                    "hook": "string",
+                    "context": "string",
+                    "transition": "string"
+                },
+                "mainPoints": [
                     {
                         "title": "string",
-                        "content": "string", 
-                        "notes": "string",
-                        "scriptureReferences": ["string"]
+                        "content": "string",
+                        "subPoints": ["string"],
+                        "illustration": "string",
+                        "application": "string",
+                        "scriptureReferences": ["string"],
+                        "originalLanguageNotes": "string"
                     }
-                ]
+                ],
+                "conclusion": {
+                    "summary": "string",
+                    "callToAction": "string",
+                    "closingPrayer": "string"
+                }
             },
             "keyThemes": ["string"],
+            "theologicalPerspectives": ["string"],
             "applicationPoints": ["string"],
-            "crossReferences": ["string"]
+            "crossReferences": ["string"],
+            "illustrations": ["string"],
+            "discussionQuestions": ["string"],
+            "followUpResources": ["string"]
         }`;
 
         const response = await ai.models.generateContent({
@@ -210,7 +228,18 @@ export async function generateSermonOutline(topic: string, scripture: string): P
                     required: ["outline", "keyThemes", "applicationPoints", "crossReferences"]
                 }
             },
-            contents: `Generate a comprehensive sermon outline on the topic "${topic}" using the scripture passage "${scripture}". Include 3-4 main points with detailed notes, practical applications, and relevant cross-references.`,
+            contents: `Generate a comprehensive, multi-layered sermon outline on "${topic}" using "${scripture}". 
+            Audience: ${audienceType || 'general congregation'}
+            Length: ${sermonLength || '25-30 minutes'}
+            Style: ${style || 'expository'}
+            
+            Include:
+            - Engaging introduction with hook and context
+            - 3-4 main points with sub-points and detailed exposition
+            - Practical illustrations and real-world applications
+            - Original language insights where relevant
+            - Discussion questions for small groups
+            - Resources for further study`,
         });
 
         const rawJson = response.text;
@@ -304,5 +333,222 @@ export async function generateBiblicalInsights(passage: string): Promise<any> {
     } catch (error) {
         console.error('Error generating biblical insights:', error);
         throw new Error(`Failed to generate biblical insights: ${error}`);
+    }
+}
+
+// Advanced AI-powered scripture search with semantic understanding
+export async function semanticScriptureSearch(query: string, context?: string): Promise<any> {
+    try {
+        const systemPrompt = `You are a biblical AI expert with comprehensive knowledge of scripture.
+        Analyze the user's query and provide semantically relevant Bible passages, even if they don't contain exact keywords.
+        Consider themes, concepts, emotions, and spiritual needs behind the query.
+        Respond with JSON format:
+        {
+            "interpretedQuery": "string - what you understand the user is really asking about",
+            "suggestedPassages": [
+                {
+                    "reference": "string",
+                    "text": "string",
+                    "relevanceReason": "string",
+                    "theme": "string",
+                    "application": "string"
+                }
+            ],
+            "relatedConcepts": ["string"],
+            "prayerSuggestion": "string"
+        }`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "object",
+                    properties: {
+                        interpretedQuery: { type: "string" },
+                        suggestedPassages: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    reference: { type: "string" },
+                                    text: { type: "string" },
+                                    relevanceReason: { type: "string" },
+                                    theme: { type: "string" },
+                                    application: { type: "string" }
+                                },
+                                required: ["reference", "text", "relevanceReason", "theme"]
+                            }
+                        },
+                        relatedConcepts: {
+                            type: "array",
+                            items: { type: "string" }
+                        },
+                        prayerSuggestion: { type: "string" }
+                    },
+                    required: ["interpretedQuery", "suggestedPassages", "relatedConcepts"]
+                }
+            },
+            contents: `Find Bible passages relevant to this query: "${query}"${context ? ` Context: ${context}` : ''}. Look beyond literal keywords to understand the spiritual need or theme.`,
+        });
+
+        const rawJson = response.text;
+        if (rawJson) {
+            return JSON.parse(rawJson);
+        } else {
+            throw new Error("Empty response from model");
+        }
+    } catch (error) {
+        console.error('Error in semantic scripture search:', error);
+        throw new Error(`Failed to perform semantic scripture search: ${error}`);
+    }
+}
+
+// AI-powered sermon illustration generator
+export async function generateSermonIllustrations(theme: string, audience: string): Promise<any> {
+    try {
+        const systemPrompt = `You are a master storyteller and preacher specializing in compelling sermon illustrations.
+        Generate powerful, memorable illustrations that connect biblical truth to modern life.
+        Consider the audience and make illustrations culturally relevant and impactful.
+        Respond with JSON:
+        {
+            "illustrations": [
+                {
+                    "type": "string - (story, analogy, historical_example, modern_parallel, nature, etc.)",
+                    "title": "string",
+                    "content": "string - full illustration",
+                    "applicationPoint": "string",
+                    "scriptureConnection": "string",
+                    "emotionalImpact": "string"
+                }
+            ],
+            "visualAids": ["string - suggestions for visual elements"],
+            "interactiveElements": ["string - ways to engage the congregation"]
+        }`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json",
+            },
+            contents: `Generate 3-4 powerful sermon illustrations for the theme "${theme}" targeting "${audience}" audience. Make them memorable, emotionally resonant, and clearly connected to the biblical message.`,
+        });
+
+        const rawJson = response.text;
+        if (rawJson) {
+            return JSON.parse(rawJson);
+        } else {
+            throw new Error("Empty response from model");
+        }
+    } catch (error) {
+        console.error('Error generating sermon illustrations:', error);
+        throw new Error(`Failed to generate sermon illustrations: ${error}`);
+    }
+}
+
+// Enhanced podcast script generator with AI voice considerations
+export async function generatePodcastScript(sermonContent: string, duration: number = 20): Promise<any> {
+    try {
+        const systemPrompt = `You are an expert podcast producer specializing in transforming sermons into engaging audio content.
+        Create a podcast script that maintains theological depth while being conversational and radio-friendly.
+        Consider pacing, voice inflection cues, and audio engagement techniques.
+        Respond with JSON:
+        {
+            "script": {
+                "intro": {
+                    "content": "string",
+                    "voiceNotes": "string - guidance for delivery",
+                    "musicCue": "string"
+                },
+                "segments": [
+                    {
+                        "type": "string - (teaching, story, reflection, prayer, etc.)",
+                        "content": "string",
+                        "voiceNotes": "string",
+                        "timing": "string - estimated duration"
+                    }
+                ],
+                "outro": {
+                    "content": "string",
+                    "callToAction": "string",
+                    "voiceNotes": "string"
+                }
+            },
+            "estimatedDuration": "string",
+            "voiceCharacteristics": {
+                "tone": "string",
+                "pace": "string",
+                "emphasis": ["string"]
+            },
+            "audioEnhancements": ["string - suggestions for music, effects, etc."],
+            "engagementTechniques": ["string"]
+        }`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json",
+            },
+            contents: `Transform this sermon content into an engaging ${duration}-minute podcast script: "${sermonContent.substring(0, 1000)}..."`,
+        });
+
+        const rawJson = response.text;
+        if (rawJson) {
+            return JSON.parse(rawJson);
+        } else {
+            throw new Error("Empty response from model");
+        }
+    } catch (error) {
+        console.error('Error generating podcast script:', error);
+        throw new Error(`Failed to generate podcast script: ${error}`);
+    }
+}
+
+// Advanced visual media prompt generator for AI image creation
+export async function generateSermonVisualPrompts(theme: string, style: string = "inspirational"): Promise<any> {
+    try {
+        const systemPrompt = `You are an expert in AI image generation and religious visual design.
+        Create detailed, professional prompts for generating stunning sermon visuals that are theologically appropriate and visually compelling.
+        Consider composition, lighting, symbolism, and emotional impact.
+        Respond with JSON:
+        {
+            "mainImage": {
+                "prompt": "string - detailed AI image generation prompt",
+                "style": "string",
+                "composition": "string",
+                "colorPalette": "string"
+            },
+            "alternativeImages": [
+                {
+                    "prompt": "string",
+                    "purpose": "string - (slide background, social media, print, etc.)",
+                    "description": "string"
+                }
+            ],
+            "designPrinciples": ["string"],
+            "symbolismExplanation": "string"
+        }`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json",
+            },
+            contents: `Generate professional AI image prompts for sermon visuals on the theme "${theme}" in "${style}" style. Focus on creating inspiring, biblically appropriate imagery.`,
+        });
+
+        const rawJson = response.text;
+        if (rawJson) {
+            return JSON.parse(rawJson);
+        } else {
+            throw new Error("Empty response from model");
+        }
+    } catch (error) {
+        console.error('Error generating visual prompts:', error);
+        throw new Error(`Failed to generate visual prompts: ${error}`);
     }
 }

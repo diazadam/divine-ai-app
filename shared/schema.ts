@@ -64,6 +64,19 @@ export const generatedImages = pgTable("generated_images", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const generatedVideos = pgTable("generated_videos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  prompt: text("prompt").notNull(),
+  videoUrl: text("video_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"),
+  style: text("style"),
+  aspectRatio: text("aspect_ratio"),
+  status: text("status").default("processing"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const voiceRecordings = pgTable("voice_recordings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
@@ -110,6 +123,16 @@ export const insertGeneratedImageSchema = createInsertSchema(generatedImages).pi
   aspectRatio: true,
 });
 
+export const insertGeneratedVideoSchema = createInsertSchema(generatedVideos).pick({
+  prompt: true,
+  videoUrl: true,
+  thumbnailUrl: true,
+  duration: true,
+  style: true,
+  aspectRatio: true,
+  status: true,
+});
+
 export const insertVoiceRecordingSchema = createInsertSchema(voiceRecordings).pick({
   sermonId: true,
   title: true,
@@ -129,5 +152,7 @@ export type InsertScriptureCollection = z.infer<typeof insertScriptureCollection
 export type ScriptureCollection = typeof scriptureCollections.$inferSelect;
 export type InsertGeneratedImage = z.infer<typeof insertGeneratedImageSchema>;
 export type GeneratedImage = typeof generatedImages.$inferSelect;
+export type InsertGeneratedVideo = z.infer<typeof insertGeneratedVideoSchema>;
+export type GeneratedVideo = typeof generatedVideos.$inferSelect;
 export type InsertVoiceRecording = z.infer<typeof insertVoiceRecordingSchema>;
 export type VoiceRecording = typeof voiceRecordings.$inferSelect;

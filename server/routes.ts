@@ -4,11 +4,13 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { bibleApiService } from "./services/bible-api";
 import { audioProcessorService } from "./services/audio-processor";
+import { generateVideo } from "./services/veo";
 import { 
   insertSermonSchema, 
   insertPodcastSchema, 
   insertScriptureCollectionSchema,
   insertGeneratedImageSchema,
+  insertGeneratedVideoSchema,
   insertVoiceRecordingSchema 
 } from "@shared/schema";
 import multer from 'multer';
@@ -302,6 +304,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Generated images fetch error:', error);
       res.status(500).json({ error: "Failed to fetch generated images" });
+    }
+  });
+
+  // Video generation endpoints
+  app.get("/api/generated-videos", async (req, res) => {
+    try {
+      const videos = await storage.getGeneratedVideosByUser(MOCK_USER_ID);
+      res.json(videos);
+    } catch (error) {
+      console.error('Generated videos fetch error:', error);
+      res.status(500).json({ error: "Failed to fetch generated videos" });
+    }
+  });
+
+  app.post("/api/generate-video", async (req, res) => {
+    try {
+      const { prompt, duration, style, aspectRatio } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      // Start video generation
+      const video = await generateVideo({ 
+        prompt, 
+        duration: duration || 5, 
+        style: style || 'cinematic',
+        aspectRatio: aspectRatio || '16:9'
+      });
+
+      // Save to database
+      const savedVideo = await storage.createGeneratedVideo({
+        userId: MOCK_USER_ID,
+        prompt,
+        videoUrl: video.videoUrl,
+        thumbnailUrl: video.thumbnailUrl,
+        duration: duration || 5,
+        style: style || 'cinematic',
+        aspectRatio: aspectRatio || '16:9',
+        status: 'completed'
+      });
+
+      res.json(savedVideo);
+    } catch (error) {
+      console.error('Video generation error:', error);
+      res.status(500).json({ error: "Failed to generate video" });
     }
   });
 

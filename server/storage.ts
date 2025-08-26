@@ -9,6 +9,8 @@ import {
   type InsertScriptureCollection,
   type GeneratedImage,
   type InsertGeneratedImage,
+  type GeneratedVideo,
+  type InsertGeneratedVideo,
   type VoiceRecording,
   type InsertVoiceRecording
 } from "@shared/schema";
@@ -47,6 +49,12 @@ export interface IStorage {
   createGeneratedImage(image: InsertGeneratedImage & { userId: string }): Promise<GeneratedImage>;
   deleteGeneratedImage(id: string): Promise<boolean>;
 
+  // Generated video methods
+  getGeneratedVideo(id: string): Promise<GeneratedVideo | undefined>;
+  getGeneratedVideosByUser(userId: string): Promise<GeneratedVideo[]>;
+  createGeneratedVideo(video: InsertGeneratedVideo & { userId: string }): Promise<GeneratedVideo>;
+  deleteGeneratedVideo(id: string): Promise<boolean>;
+
   // Voice recording methods
   getVoiceRecording(id: string): Promise<VoiceRecording | undefined>;
   getVoiceRecordingsByUser(userId: string): Promise<VoiceRecording[]>;
@@ -61,6 +69,7 @@ export class MemStorage implements IStorage {
   private podcasts: Map<string, Podcast> = new Map();
   private scriptureCollections: Map<string, ScriptureCollection> = new Map();
   private generatedImages: Map<string, GeneratedImage> = new Map();
+  private generatedVideos: Map<string, GeneratedVideo> = new Map();
   private voiceRecordings: Map<string, VoiceRecording> = new Map();
 
   // User methods
@@ -215,6 +224,30 @@ export class MemStorage implements IStorage {
 
   async deleteGeneratedImage(id: string): Promise<boolean> {
     return this.generatedImages.delete(id);
+  }
+
+  // Generated video methods
+  async getGeneratedVideo(id: string): Promise<GeneratedVideo | undefined> {
+    return this.generatedVideos.get(id);
+  }
+
+  async getGeneratedVideosByUser(userId: string): Promise<GeneratedVideo[]> {
+    return Array.from(this.generatedVideos.values()).filter(video => video.userId === userId);
+  }
+
+  async createGeneratedVideo(videoData: InsertGeneratedVideo & { userId: string }): Promise<GeneratedVideo> {
+    const id = randomUUID();
+    const video: GeneratedVideo = {
+      ...videoData,
+      id,
+      createdAt: new Date(),
+    };
+    this.generatedVideos.set(id, video);
+    return video;
+  }
+
+  async deleteGeneratedVideo(id: string): Promise<boolean> {
+    return this.generatedVideos.delete(id);
   }
 
   // Voice recording methods

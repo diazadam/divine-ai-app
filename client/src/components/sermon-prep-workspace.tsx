@@ -3,10 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { List, Wand2, Save, Plus, Lightbulb, Mic, Play, ChevronLeft } from "lucide-react";
+import { List, Wand2, Save, Plus, Lightbulb, Mic, Play, ChevronLeft, Sparkles } from "lucide-react";
 import GlassCard from "@/components/ui/glass-card";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import type { Sermon } from "@shared/schema";
 
 interface SermonSection {
@@ -18,6 +19,7 @@ interface SermonSection {
 export default function SermonPrepWorkspace() {
   const [title, setTitle] = useState("Finding Hope in the Storm");
   const [scripture, setScripture] = useState("Psalm 42:11");
+  const [topic, setTopic] = useState("Hope in difficult times");
   const [sections, setSections] = useState<SermonSection[]>([
     {
       title: "I. Introduction: The Reality of Life's Storms",
@@ -37,6 +39,7 @@ export default function SermonPrepWorkspace() {
   ]);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: sermons = [] } = useQuery<Sermon[]>({
     queryKey: ['/api/sermons'],
@@ -55,6 +58,44 @@ export default function SermonPrepWorkspace() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sermons'] });
+      toast({
+        title: "Sermon saved!",
+        description: "Your sermon has been saved successfully.",
+      });
+    },
+  });
+
+  const generateOutlineMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/ai/generate-sermon-outline', {
+        topic: topic || title,
+        scripture,
+        audienceType: 'general congregation',
+        sermonLength: '25-30 minutes',
+        style: 'expository',
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.outline && data.outline.sections) {
+        const newSections = data.outline.sections.map((section: any) => ({
+          title: section.title,
+          content: section.content,
+          notes: section.notes,
+        }));
+        setSections(newSections);
+        toast({
+          title: "✨ AI Outline Generated!",
+          description: "Your sermon outline has been created with Gemini AI.",
+        });
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Generation failed",
+        description: "Unable to generate outline. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -117,10 +158,12 @@ export default function SermonPrepWorkspace() {
                   <Button
                     variant="default"
                     className="bg-divine-600 hover:bg-divine-500"
+                    onClick={() => generateOutlineMutation.mutate()}
+                    disabled={generateOutlineMutation.isPending}
                     data-testid="generate-outline-button"
                   >
-                    <Wand2 className="w-4 h-4 mr-2" />
-                    AI Generate
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    {generateOutlineMutation.isPending ? "Generating..." : "AI Generate"}
                   </Button>
                   <Button
                     onClick={() => saveMutation.mutate()}
@@ -149,8 +192,16 @@ export default function SermonPrepWorkspace() {
                     placeholder="Main Scripture"
                     value={scripture}
                     onChange={(e) => setScripture(e.target.value)}
-                    className="w-full bg-transparent text-divine-400 border-none outline-none"
+                    className="w-full bg-transparent text-divine-400 border-none outline-none mb-2"
                     data-testid="sermon-scripture-input"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Sermon Topic (for AI generation)"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    className="w-full bg-transparent text-gray-300 border-none outline-none"
+                    data-testid="sermon-topic-input"
                   />
                 </div>
                 

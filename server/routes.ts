@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { bibleApiService } from "./services/bible-api";
 import { audioProcessorService } from "./services/audio-processor";
 import { generateVideo } from "./services/veo";
+import * as geminiService from "./services/gemini";
 import { 
   insertSermonSchema, 
   insertPodcastSchema, 
@@ -139,6 +140,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Sermon creation error:', error);
       res.status(400).json({ error: "Failed to create sermon" });
+    }
+  });
+
+  // AI-powered sermon generation endpoints
+  app.post("/api/ai/generate-sermon-outline", async (req, res) => {
+    try {
+      const { topic, scripture, audienceType, sermonLength, style } = req.body;
+      
+      if (!topic || !scripture) {
+        return res.status(400).json({ error: "Topic and scripture are required" });
+      }
+
+      const outline = await geminiService.generateAdvancedSermonOutline(
+        topic, 
+        scripture, 
+        audienceType, 
+        sermonLength, 
+        style
+      );
+      
+      res.json(outline);
+    } catch (error) {
+      console.error('Sermon outline generation error:', error);
+      res.status(500).json({ error: "Failed to generate sermon outline" });
+    }
+  });
+
+  app.post("/api/ai/biblical-insights", async (req, res) => {
+    try {
+      const { passage } = req.body;
+      
+      if (!passage) {
+        return res.status(400).json({ error: "Passage is required" });
+      }
+
+      const insights = await geminiService.generateBiblicalInsights(passage);
+      res.json(insights);
+    } catch (error) {
+      console.error('Biblical insights generation error:', error);
+      res.status(500).json({ error: "Failed to generate biblical insights" });
+    }
+  });
+
+  app.post("/api/ai/pastoral-guidance", async (req, res) => {
+    try {
+      const { question, context } = req.body;
+      
+      if (!question) {
+        return res.status(400).json({ error: "Question is required" });
+      }
+
+      const guidance = await geminiService.providePastoralGuidance(question, context);
+      res.json({ guidance });
+    } catch (error) {
+      console.error('Pastoral guidance error:', error);
+      res.status(500).json({ error: "Failed to provide pastoral guidance" });
+    }
+  });
+
+  app.post("/api/ai/semantic-scripture-search", async (req, res) => {
+    try {
+      const { query, context } = req.body;
+      
+      if (!query) {
+        return res.status(400).json({ error: "Query is required" });
+      }
+
+      const results = await geminiService.semanticScriptureSearch(query, context);
+      res.json(results);
+    } catch (error) {
+      console.error('Semantic scripture search error:', error);
+      res.status(500).json({ error: "Failed to perform scripture search" });
+    }
+  });
+
+  app.post("/api/ai/generate-illustrations", async (req, res) => {
+    try {
+      const { theme, audience } = req.body;
+      
+      if (!theme || !audience) {
+        return res.status(400).json({ error: "Theme and audience are required" });
+      }
+
+      const illustrations = await geminiService.generateSermonIllustrations(theme, audience);
+      res.json(illustrations);
+    } catch (error) {
+      console.error('Illustration generation error:', error);
+      res.status(500).json({ error: "Failed to generate illustrations" });
     }
   });
 

@@ -14,15 +14,51 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS (allow frontend to connect). Configure CORS_ORIGIN for stricter origins.
+// CORS
+// In production, only allow explicit origins from CORS_ORIGIN (comma-separated).
+// In development, reflect the request origin (or '*' as a last resort).
 app.use((req, res, next) => {
-  const origin = process.env.CORS_ORIGIN || req.headers.origin || '*';
-  res.header('Access-Control-Allow-Origin', origin as string);
-  res.header('Vary', 'Origin');
+  const reqOrigin = (req.headers.origin as string) || undefined;
+  const isProd = process.env.NODE_ENV === 'production';
+  const allowed = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  let originToSet: string | undefined;
+
+  if (allowed.length > 0) {
+    if (reqOrigin && allowed.includes(reqOrigin)) originToSet = reqOrigin;
+  } else if (!isProd) {
+    originToSet = reqOrigin || '*';
+  }
+
+  if (originToSet) {
+    res.header('Access-Control-Allow-Origin', originToSet);
+    res.header('Vary', 'Origin');
+    // Credentials cannot be used with wildcard origin
+    if (originToSet !== '*') {
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
+
+  if (req.method === 'OPTIONS') {
+    // For disallowed origins in prod, end preflight quickly
+    if (isProd && allowed.length > 0 && (!reqOrigin || !allowed.includes(reqOrigin))) {
+      return res.status(204).end();
+    }
+    return res.sendStatus(204);
+  }
+
+  if (isProd && allowed.length > 0) {
+    if (!reqOrigin || !allowed.includes(reqOrigin)) {
+      return res.status(403).json({ error: 'CORS origin not allowed' });
+    }
+  }
+
   next();
 });
 

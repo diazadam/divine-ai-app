@@ -162,7 +162,8 @@ export class MemStorage implements IStorage {
       description: podcastData.description ?? null,
       audioUrl: podcastData.audioUrl ?? null,
       duration: podcastData.duration ?? null,
-      status: 'processing',
+      // If we already have an audioUrl (uploaded/processed), mark as completed; otherwise processing
+      status: (podcastData.audioUrl ?? null) ? 'completed' : 'processing',
       playCount: 0,
       createdAt: new Date(),
     };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,13 +14,28 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Read optional return path and toast signal
+  const { returnTo, toastAfter } = useMemo(() => {
+    if (typeof window === 'undefined') return { returnTo: '', toastAfter: '' };
+    const p = new URLSearchParams(window.location.search);
+    return {
+      returnTo: p.get('returnTo') || '',
+      toastAfter: p.get('toastAfter') || '',
+    };
+  }, []);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
       await login.mutateAsync({ username, password });
+      // Optionally signal a post-login toast to the destination page
+      if (toastAfter) {
+        try { localStorage.setItem('postLoginToast', toastAfter); } catch {}
+      }
+      // Immediate feedback on login
       toast({ title: 'Welcome back!', description: `Signed in as ${username}` });
-      setLocation('/');
+      setLocation(returnTo || '/');
     } catch (e: any) {
       setError('Invalid credentials');
       toast({ title: 'Login failed', variant: 'destructive' });

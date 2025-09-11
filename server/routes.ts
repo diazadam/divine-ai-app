@@ -135,6 +135,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(health.status === 'operational' ? 200 : 503).json(health);
   });
 
+  // Minimal, non-secret health check (no external calls)
+  // Returns only booleans and environment flags; safe for load balancers
+  app.get('/api/healthz', (req, res) => {
+    const payload = {
+      ok: true,
+      timestamp: new Date().toISOString(),
+      env: {
+        bibleApiKey: !!process.env.BIBLE_API_KEY,
+        geminiApiKey: !!process.env.GEMINI_API_KEY,
+        openAiApiKey: !!process.env.OPENAI_API_KEY,
+        requireAuth: process.env.REQUIRE_AUTH === 'true',
+      },
+    } as const;
+    res.status(200).json(payload);
+  });
+
   // Optional auth gate
   app.use('/api', (req, res, next) => {
     if (process.env.REQUIRE_AUTH === 'true') {
@@ -586,6 +602,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Scripture collection delete error:', error);
       res.status(400).json({ error: 'Failed to delete collection' });
+    }
+  });
+
+  // Export a collection (owned by user) to JSON
+  app.get('/api/scripture-collections/:id/export', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const coll = await storage.getScriptureCollection(id);
+      if (!coll || coll.userId !== getReqUserId(req)) return res.status(404).json({ error: 'Collection not found' });
+      res.json({ name: coll.name, description: coll.description, verses: coll.verses || [] });
+    } catch (error) {
+      console.error('Scripture collection export error:', error);
+      res.status(400).json({ error: 'Failed to export collection' });
+    }
+  });
+
+  // Import a collection JSON into the current user's account
+  app.post('/api/scripture-collections/import', async (req, res) => {
+    try {
+      const { name, description, verses } = req.body as { name?: string; description?: string; verses?: any[] };
+      if (!name || !Array.isArray(verses)) return res.status(400).json({ error: 'Invalid payload' });
+      const created = await storage.createScriptureCollection({
+        name,
+        description: description ?? null,
+        verses: verses as any,
+        userId: getReqUserId(req),
+      } as any);
+      res.status(201).json(created);
+    } catch (error) {
+      console.error('Scripture collection import error:', error);
+      res.status(400).json({ error: 'Failed to import collection' });
     }
   });
 

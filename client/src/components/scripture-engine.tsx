@@ -161,6 +161,14 @@ export default function ScriptureEngine() {
     }
   };
 
+  // Auto-load the full chapter content when a chapter is selected
+  useEffect(() => {
+    if (selectedChapterId && selectedChapterId !== 'All') {
+      loadPassage(selectedChapterId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChapterId]);
+
   // After passage/verse changes, scroll to exact verse element if available
   useEffect(() => {
     if (!passage || !selectedVerseId) return;
@@ -336,6 +344,43 @@ export default function ScriptureEngine() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Search Interface */}
           <div className="lg:col-span-2">
+            {/* Passage Reader (full width) */}
+            {passage && (
+              <GlassCard className="p-6 premium-shadow">
+                <div ref={passageRef}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-lg font-semibold">{passage.reference}</div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <Button size="sm" variant="outline" className="h-7 px-2"
+                        onClick={() => {
+                          try {
+                            const idx = (chapters || []).findIndex((c: any) => c.id === selectedChapterId);
+                            if (idx > 0) setSelectedChapterId((chapters as any)[idx - 1].id);
+                          } catch {}
+                        }}
+                      >Prev</Button>
+                      <Button size="sm" variant="outline" className="h-7 px-2"
+                        onClick={() => {
+                          try {
+                            const idx = (chapters || []).findIndex((c: any) => c.id === selectedChapterId);
+                            if (idx >= 0 && idx < (chapters as any).length - 1) setSelectedChapterId((chapters as any)[idx + 1].id);
+                          } catch {}
+                        }}
+                      >Next</Button>
+                      <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => selectedVerseId && copyDeepLink('', selectedVerseId)}>Copy Verse Link</Button>
+                      <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => { if (selectedVerseId && passageRef.current) { const el = passageRef.current.querySelector(`[id*='${selectedVerseId}']`) as HTMLElement | null; el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }}>Scroll to Verse</Button>
+                    </div>
+                  </div>
+                  {selectedVerseId && (
+                    <style>{`
+                      @keyframes versePulse { 0% { box-shadow: 0 0 0 8px rgba(125,211,252,0.25); } 100% { box-shadow: 0 0 0 0 rgba(125,211,252,0); } }
+                      .passage-reader [id*="${selectedVerseId}"]{ background: rgba(125,211,252,.25); border-radius: .25rem; padding: .1rem .15rem; animation: versePulse 1.5s ease-out 1; }
+                    `}</style>
+                  )}
+                  <div className="prose prose-invert max-w-none text-base md:text-lg leading-relaxed passage-reader" dangerouslySetInnerHTML={{ __html: passage.content }} />
+                </div>
+              </GlassCard>
+            )}
             <GlassCard className="p-6 premium-shadow">
               {/* Search Bar */}
               <form onSubmit={handleSearch} className="mb-6">
@@ -382,6 +427,16 @@ export default function ScriptureEngine() {
                     </SelectContent>
                   </Select>
 
+                  {selectedBookId === 'All' && books?.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {books.map((b: any) => (
+                        <Button key={b.id} variant="ghost" className="justify-start" onClick={() => setSelectedBookId(b.id)}>
+                          {b.name}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+
                   {selectedBookId !== "All" && (
                     <Select value={selectedChapterId} onValueChange={(v) => { setSelectedChapterId(v); setSelectedVerseId(null); window.location.hash = v; }}>
                       <SelectTrigger className="w-56 bg-celestial-800/50 border border-white/10">
@@ -393,6 +448,20 @@ export default function ScriptureEngine() {
                         ))}
                       </SelectContent>
                     </Select>
+                  )}
+
+                  {selectedBookId !== 'All' && chapters?.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {chapters.map((c: any) => {
+                        const label = (c.reference || c.id || '').split('.').pop() || '';
+                        const active = selectedChapterId === c.id;
+                        return (
+                          <Button key={c.id} variant={active ? 'default' : 'outline'} size="sm" className={`h-7 px-2 ${active ? '' : 'bg-celestial-800/50 border-white/10'}`} onClick={() => setSelectedChapterId(c.id)}>
+                            {label}
+                          </Button>
+                        );
+                      })}
+                    </div>
                   )}
                   
                   <Button
@@ -707,7 +776,7 @@ export default function ScriptureEngine() {
                     })}
                   </div>
                 )}
-                {passage && (
+                {false && (
                   <div ref={passageRef} className="mt-4 p-3 rounded bg-celestial-800/30 border border-white/10 passage-view">
                     <div className="flex items-center justify-between mb-2">
                       <div className="text-sm font-medium">{passage.reference}</div>

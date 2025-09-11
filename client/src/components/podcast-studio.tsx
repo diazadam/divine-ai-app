@@ -43,6 +43,7 @@ export default function PodcastStudio() {
       const response = await fetch('/api/podcasts', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to generate podcast');
       return response.json();

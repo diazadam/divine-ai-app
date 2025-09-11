@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,9 +16,13 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import GlassCard from "@/components/ui/glass-card";
-import { apiRequest } from "@/lib/queryClient";
+import { apiClient } from "@/lib/api-client";
+import { useToast } from "@/hooks/use-toast";
+import { lazy, Suspense } from 'react';
+const CollectionsManager = lazy(() => import('@/components/collections-manager'));
 
 interface BibleVerse {
+  id?: string;
   reference: string;
   text: string;
   version: string;
@@ -32,13 +36,207 @@ interface SearchResult {
 export default function ScriptureEngine() {
   const [searchQuery, setSearchQuery] = useState("hope in difficult times");
   const [selectedVersion, setSelectedVersion] = useState("NIV");
-  const [selectedBook, setSelectedBook] = useState("All Books");
+  const [selectedBibleId, setSelectedBibleId] = useState("de4e12af7f28f599-02");
+  const [selectedBookId, setSelectedBookId] = useState<string | "All">("All");
+  const [selectedChapterId, setSelectedChapterId] = useState<string | "All">("All");
   const [aiContextEnabled, setAiContextEnabled] = useState(true);
+  const [selectedVerseId, setSelectedVerseId] = useState<string | null>(null);
+  const navigatorRef = useRef<HTMLDivElement | null>(null);
+  const passageRef = useRef<HTMLDivElement | null>(null);
+  const { toast } = useToast();
 
-  const { data: searchResults, isLoading } = useQuery<SearchResult>({
-    queryKey: ['/api/scripture/search', searchQuery, selectedVersion],
-    enabled: searchQuery.length > 0,
+  // Initialize from persisted bible selection
+  // Persisted selections per Bible
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedBible = localStorage.getItem('selectedBibleId');
+    if (savedBible) setSelectedBibleId(savedBible);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('selectedBibleId', selectedBibleId);
+    const savedBook = localStorage.getItem(`selectedBookId:${selectedBibleId}`);
+    const savedChapter = localStorage.getItem(`selectedChapterId:${selectedBibleId}`);
+    setSelectedBookId((savedBook as any) || 'All');
+    setSelectedChapterId((savedChapter as any) || 'All');
+  }, [selectedBibleId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(`selectedBookId:${selectedBibleId}`, selectedBookId);
+  }, [selectedBookId, selectedBibleId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (selectedChapterId !== 'All') {
+      localStorage.setItem(`selectedChapterId:${selectedBibleId}`, selectedChapterId);
+    } else {
+      localStorage.removeItem(`selectedChapterId:${selectedBibleId}`);
+    }
+  }, [selectedChapterId, selectedBibleId]);
+
+  // Bibles list
+  const { data: biblesData } = useQuery<any>({
+    queryKey: ['/api/bibles'],
+    queryFn: () => apiClient.get('/api/bibles'),
   });
+
+  const bibleOptions = useMemo(() => {
+    const items = (biblesData?.data || []) as Array<any>;
+    return items.map((b) => ({
+      id: b.id,
+      label: [b.abbreviation, b.name].filter(Boolean).join(' - '),
+    }));
+  }, [biblesData]);
+
+  // Books for selected Bible
+  const { data: booksData } = useQuery<any>({
+    queryKey: ['/api/bibles', selectedBibleId, 'books'],
+    enabled: !!selectedBibleId,
+    queryFn: () => apiClient.get(`/api/bibles/${selectedBibleId}/books`),
+  });
+
+  const books = useMemo(() => (booksData?.data || []) as Array<any>, [booksData]);
+  const bookOptions = useMemo(() => {
+    return [{ id: "All", label: "All Books" }, ...books.map((b) => ({ id: b.id, label: b.name }))];
+  }, [books]);
+
+  // Chapters for selected book
+  const { data: chaptersData } = useQuery<any>({
+    queryKey: ['/api/bibles', selectedBibleId, 'books', selectedBookId, 'chapters'],
+    enabled: !!selectedBibleId && selectedBookId !== "All",
+    queryFn: () => apiClient.get(`/api/bibles/${selectedBibleId}/books/${selectedBookId}/chapters`),
+  });
+
+  const chapters = useMemo(() => (chaptersData?.data || []) as Array<any>, [chaptersData]);
+  const chapterOptions = useMemo(() => {
+    return [{ id: "All", label: "All Chapters" }, ...chapters.map((c) => ({ id: c.id, label: c.reference || c.id }))];
+  }, [chapters]);
+
+  // Deep link: parse URL hash like #JHN.3.16
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash?.slice(1);
+    if (!hash) return;
+    const m = hash.match(/^[A-Z0-9]+\.(\d+)(?:\.(\d+))?$/i);
+    if (!m) return;
+    // Require book id present
+    const [bookId, chap, verse] = hash.split('.');
+    if (!bookId || !chap) return;
+    setSelectedBookId(bookId.toUpperCase());
+    const chapterId = `${bookId.toUpperCase()}.${chap}`;
+    setSelectedChapterId(chapterId);
+    setSelectedVerseId(verse ? `${bookId.toUpperCase()}.${chap}.${verse}` : null);
+    loadPassage(chapterId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Search verses with API.Bible
+  const { data: searchResults, isLoading } = useQuery<SearchResult>({
+    queryKey: ['/api/bible-search', selectedBibleId, searchQuery, selectedVersion],
+    enabled: searchQuery.length > 0,
+    queryFn: () => apiClient.get(`/api/bibles/${selectedBibleId}/search?query=${encodeURIComponent(searchQuery)}&limit=20&version=${encodeURIComponent(selectedVersion)}`),
+  });
+
+  // Verses for selected chapter (Navigator mode)
+  const { data: chapterVersesData } = useQuery<any>({
+    queryKey: ['/api/bibles', selectedBibleId, 'chapters', selectedChapterId, 'verses'],
+    enabled: !!selectedBibleId && selectedChapterId !== "All",
+    queryFn: () => apiClient.get(`/api/bibles/${selectedBibleId}/chapters/${selectedChapterId}/verses`),
+  });
+
+  // Passage view (fetch full chapter or range via passages endpoint)
+  const [passage, setPassage] = useState<{ reference: string; content: string } | null>(null);
+  const loadPassage = async (passageId: string) => {
+    try {
+      const data: any = await apiClient.get(`/api/bibles/${selectedBibleId}/passages/${encodeURIComponent(passageId)}`);
+      const ref = data?.data?.reference || passageId;
+      const content: string = (data?.data?.content || '').toString();
+      setPassage({ reference: ref, content });
+      // scroll to navigator/passage view
+      setTimeout(() => navigatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+    } catch (e) {
+      console.error('Failed to load passage', e);
+    }
+  };
+
+  // After passage/verse changes, scroll to exact verse element if available
+  useEffect(() => {
+    if (!passage || !selectedVerseId) return;
+    const container = passageRef.current;
+    if (!container) return;
+    // Try matching common API.Bible verse span ids
+    const el = container.querySelector(`[id*="${selectedVerseId}"]`) as HTMLElement | null;
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [passage, selectedVerseId]);
+
+  // Attach per-verse inline "Copy link" buttons to passage HTML
+  useEffect(() => {
+    if (!passage) return;
+    const container = passageRef.current;
+    if (!container) return;
+
+    const candidates = Array.from(container.querySelectorAll('[id]')) as HTMLElement[];
+    const verseEls = candidates.filter((n) => /[A-Z0-9]+\.\d+\.\d+/i.test(n.id));
+
+    verseEls.forEach((node) => {
+      // Avoid duplicating buttons
+      if (node.querySelector('.verse-link-btn')) return;
+      const sup = document.createElement('sup');
+      sup.className = 'verse-link-btn';
+      sup.style.marginLeft = '4px';
+      sup.style.opacity = '0.6';
+      sup.style.cursor = 'pointer';
+      sup.title = 'Copy deep link';
+      sup.textContent = '🔗';
+      sup.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const verseId = node.id;
+        const url = `${window.location.origin}${window.location.pathname}#${verseId}`;
+        navigator.clipboard.writeText(url);
+      });
+      node.appendChild(sup);
+    });
+  }, [passage]);
+
+  // Navigate from a reference string like "John 3:16"
+  const handleGoToReference = async (reference: string) => {
+    if (!books.length) return;
+    const refLower = reference.toLowerCase();
+    // Find the best matching book by longest name prefix
+    let matched = null as null | { id: string; name: string };
+    for (const b of books) {
+      const name = (b.name || '').toLowerCase();
+      if (name && refLower.startsWith(name) && (!matched || name.length > matched.name.length)) {
+        matched = { id: b.id, name: b.name };
+      }
+    }
+    if (!matched) return;
+    // Extract chapter number from the remainder
+    const remainder = reference.slice(matched.name.length).trim();
+    const chapterMatch = remainder.match(/(\d+)/); // first number is chapter
+    if (!chapterMatch) return;
+    const chapterNum = chapterMatch[1];
+    const verseMatch = remainder.match(/:(\d+)/);
+    const verseNum = verseMatch ? verseMatch[1] : null;
+    const chapterId = `${matched.id}.${chapterNum}`; // API.Bible chapter id format
+    const computedVerseId = verseNum ? `${matched.id}.${chapterNum}.${verseNum}` : null;
+    setSelectedBookId(matched.id);
+    setSelectedChapterId(chapterId);
+    setSelectedVerseId(computedVerseId);
+    setPassage(null);
+    // Update URL hash for deep links
+    if (computedVerseId) {
+      window.location.hash = computedVerseId;
+    } else {
+      window.location.hash = chapterId;
+    }
+    setTimeout(() => navigatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  };
 
   const { data: crossReferences = [] } = useQuery({
     queryKey: ['/api/scripture/cross-references', 'psalm 42:11'],
@@ -51,6 +249,68 @@ export default function ScriptureEngine() {
 
   const copyVerse = (verse: BibleVerse) => {
     navigator.clipboard.writeText(`"${verse.text}" - ${verse.reference} (${verse.version})`);
+    toast({ title: 'Copied verse' });
+  };
+
+  const computeVerseIdFromReference = (reference: string): string | null => {
+    if (!books.length) return null;
+    const refLower = reference.toLowerCase();
+    let matched = null as null | { id: string; name: string };
+    for (const b of books) {
+      const name = (b.name || '').toLowerCase();
+      if (name && refLower.startsWith(name) && (!matched || name.length > matched.name.length)) matched = { id: b.id, name: b.name };
+    }
+    if (!matched) return null;
+    const remainder = reference.slice(matched.name.length).trim();
+    const chapterMatch = remainder.match(/(\d+)/);
+    if (!chapterMatch) return null;
+    const chapterNum = chapterMatch[1];
+    const verseMatch = remainder.match(/:(\d+)/);
+    const verseNum = verseMatch ? verseMatch[1] : null;
+    return verseNum ? `${matched.id}.${chapterNum}.${verseNum}` : `${matched.id}.${chapterNum}`;
+  };
+
+  const copyDeepLink = (reference: string, id?: string) => {
+    const verseId = id || computeVerseIdFromReference(reference);
+    if (!verseId) return;
+    const url = `${window.location.origin}${window.location.pathname}#${verseId}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Link copied' });
+  };
+
+  // Add to Sermon Draft (local, read by Sermon Prep Workspace)
+  const addVerseToSermonDraft = (verse: BibleVerse) => {
+    try {
+      const key = 'sermonDraftAdditions';
+      const current = JSON.parse(localStorage.getItem(key) || '[]');
+      current.push({ reference: verse.reference, text: verse.text, version: verse.version });
+      localStorage.setItem(key, JSON.stringify(current));
+    } catch (e) {
+      console.error('Failed to cache verse for sermon draft', e);
+    }
+  };
+
+  // Bookmark verse in default collection "My Verses"
+  const bookmarkVerse = async (verse: BibleVerse) => {
+    try {
+      // Ensure default collection exists
+      const collections: any[] = await apiClient.get('/api/scripture-collections');
+      let collection = collections.find((c) => (c.name || '').toLowerCase() === 'my verses');
+      if (!collection) {
+        collection = await apiClient.post('/api/scripture-collections', {
+          name: 'My Verses',
+          description: 'Saved verses',
+          verses: [],
+        });
+      }
+      await apiClient.patch(`/api/scripture-collections/${collection.id}/add-verse`, {
+        reference: verse.reference,
+        text: verse.text,
+        version: verse.version,
+      });
+    } catch (e) {
+      console.error('Failed to bookmark verse', e);
+    }
   };
 
   return (
@@ -100,30 +360,40 @@ export default function ScriptureEngine() {
                 
                 {/* Search Filters */}
                 <div className="flex flex-wrap gap-2 mt-4">
-                  <Select value={selectedVersion} onValueChange={setSelectedVersion}>
-                    <SelectTrigger className="w-32 bg-celestial-800/50 border border-white/10">
-                      <SelectValue />
+                  <Select value={selectedBibleId} onValueChange={setSelectedBibleId}>
+                    <SelectTrigger className="w-56 bg-celestial-800/50 border border-white/10">
+                      <SelectValue placeholder="Select Bible" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="All Versions">All Versions</SelectItem>
-                      <SelectItem value="NIV">NIV</SelectItem>
-                      <SelectItem value="ESV">ESV</SelectItem>
-                      <SelectItem value="KJV">KJV</SelectItem>
-                      <SelectItem value="NASB">NASB</SelectItem>
+                      {bibleOptions.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.label || b.id}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   
-                  <Select value={selectedBook} onValueChange={setSelectedBook}>
-                    <SelectTrigger className="w-40 bg-celestial-800/50 border border-white/10">
+                  <Select value={selectedBookId} onValueChange={(v) => { setSelectedBookId(v); setSelectedChapterId("All"); window.location.hash = ''; }}>
+                    <SelectTrigger className="w-48 bg-celestial-800/50 border border-white/10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="All Books">All Books</SelectItem>
-                      <SelectItem value="Old Testament">Old Testament</SelectItem>
-                      <SelectItem value="New Testament">New Testament</SelectItem>
-                      <SelectItem value="Psalms">Psalms</SelectItem>
+                      {bookOptions.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+
+                  {selectedBookId !== "All" && (
+                    <Select value={selectedChapterId} onValueChange={(v) => { setSelectedChapterId(v); setSelectedVerseId(null); window.location.hash = v; }}>
+                      <SelectTrigger className="w-56 bg-celestial-800/50 border border-white/10">
+                        <SelectValue placeholder="Select Chapter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {chapterOptions.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   
                   <Button
                     variant={aiContextEnabled ? "default" : "outline"}
@@ -181,6 +451,7 @@ export default function ScriptureEngine() {
                               size="sm"
                               className="text-divine-400 hover:text-divine-300 h-auto p-0"
                               data-testid={`add-to-sermon-${index}`}
+                              onClick={() => addVerseToSermonDraft(verse)}
                             >
                               <Plus className="w-3 h-3 mr-1" />
                               Add to Sermon
@@ -193,6 +464,49 @@ export default function ScriptureEngine() {
                             >
                               <LinkIcon className="w-3 h-3 mr-1" />
                               Cross References
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyDeepLink(verse.reference, verse.id)}
+                              className="text-gray-400 hover:text-gray-300 h-auto p-0"
+                              data-testid={`link-verse-${index}`}
+                            >
+                              Link
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleGoToReference(verse.reference)}
+                              className="text-celestial-400 hover:text-celestial-300 h-auto p-0"
+                              data-testid={`go-to-${index}`}
+                            >
+                              Go to
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                // Compute chapter from reference
+                                if (!books.length) return;
+                                const refLower = verse.reference.toLowerCase();
+                                let matched = null as null | { id: string; name: string };
+                                for (const b of books) {
+                                  const name = (b.name || '').toLowerCase();
+                                  if (name && refLower.startsWith(name) && (!matched || name.length > matched.name.length)) matched = { id: b.id, name: b.name };
+                                }
+                                if (!matched) return;
+                                const remainder = verse.reference.slice(matched.name.length).trim();
+                                const chapterMatch = remainder.match(/(\d+)/);
+                                if (!chapterMatch) return;
+                                const chapterNum = chapterMatch[1];
+                                setSelectedVerseId(verse.id || null);
+                                loadPassage(`${matched.id}.${chapterNum}`);
+                              }}
+                              className="text-gold-400 hover:text-gold-300 h-auto p-0"
+                              data-testid={`view-chapter-${index}`}
+                            >
+                              View Chapter
                             </Button>
                             <Button
                               variant="ghost"
@@ -211,6 +525,7 @@ export default function ScriptureEngine() {
                           size="icon"
                           className="text-gray-400 hover:text-gray-300"
                           data-testid={`save-verse-${index}`}
+                          onClick={() => bookmarkVerse(verse)}
                         >
                           <Bookmark className="w-4 h-4" />
                         </Button>
@@ -304,6 +619,116 @@ export default function ScriptureEngine() {
           
           {/* Study Tools Sidebar */}
           <div className="space-y-6">
+            {/* Favorites / My Verses */}
+            <GlassCard className="p-6 premium-shadow">
+              <h3 className="text-lg font-semibold mb-4">My Verses</h3>
+              <FavoritesList onAddToSermon={addVerseToSermonDraft} />
+            </GlassCard>
+
+            <GlassCard className="p-6 premium-shadow">
+              <h3 className="text-lg font-semibold mb-4">Saved Collections</h3>
+              <Suspense fallback={<div className="text-sm text-gray-400">Loading collections…</div>}>
+                <CollectionsManager onAddToSermon={(v) => addVerseToSermonDraft({ reference: v.reference, text: v.text, version: v.version || 'N/A' })} />
+              </Suspense>
+            </GlassCard>
+            {/* Scripture Navigator */}
+            <div ref={navigatorRef}>
+            <GlassCard className="p-6 premium-shadow">
+              <h3 className="text-lg font-semibold mb-4">Scripture Navigator</h3>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Bible</div>
+                  <Select value={selectedBibleId} onValueChange={(v) => { setSelectedBibleId(v); setSelectedBookId("All"); setSelectedChapterId("All"); }}>
+                    <SelectTrigger className="w-full bg-celestial-800/50 border border-white/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bibleOptions.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.label || b.id}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Book</div>
+                  <Select value={selectedBookId} onValueChange={(v) => { setSelectedBookId(v); setSelectedChapterId("All"); }}>
+                    <SelectTrigger className="w-full bg-celestial-800/50 border border-white/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bookOptions.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedBookId !== "All" && (
+                  <div>
+                    <div className="text-xs text-gray-400 mb-1">Chapter</div>
+                    <Select value={selectedChapterId} onValueChange={setSelectedChapterId}>
+                      <SelectTrigger className="w-full bg-celestial-800/50 border border-white/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {chapterOptions.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {selectedChapterId !== "All" && (
+                  <div className="mt-2 max-h-64 overflow-y-auto space-y-2">
+                    {(chapterVersesData?.data || []).map((v: any) => {
+                      const isSelected = selectedVerseId && v.id === selectedVerseId;
+                      const verseObj: BibleVerse = { id: v.id, reference: v.reference, text: (v.text || '').replace(/<[^>]*>/g, ''), version: selectedVersion };
+                      return (
+                        <div key={v.id} id={v.id} className={`text-sm rounded ${isSelected ? 'bg-divine-600/20 border border-divine-600/40 p-2' : ''}`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-divine-400 mr-2">{v.reference?.split(' ').pop()}</span>
+                              <span className="text-gray-200">{verseObj.text}</span>
+                            </div>
+                            <div className="flex items-center gap-2 ml-3">
+                              <Button variant="ghost" size="sm" className="h-auto p-0 text-divine-400" onClick={() => addVerseToSermonDraft(verseObj)}>
+                                <Plus className="w-3 h-3 mr-1" /> Add
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-auto p-0 text-gray-400" onClick={() => copyVerse(verseObj)}>
+                                <Copy className="w-3 h-3 mr-1" /> Copy
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-auto p-0 text-gray-400" onClick={() => copyDeepLink(verseObj.reference, v.id)}>
+                                Link
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {passage && (
+                  <div ref={passageRef} className="mt-4 p-3 rounded bg-celestial-800/30 border border-white/10 passage-view">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-medium">{passage.reference}</div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => selectedVerseId && copyDeepLink('', selectedVerseId)}>Copy Verse Link</Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => { if (selectedVerseId && passageRef.current) { const el = passageRef.current.querySelector(`[id*="${selectedVerseId}"]`) as HTMLElement | null; el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }}>Scroll to Verse</Button>
+                      </div>
+                    </div>
+                    {selectedVerseId && (
+                      <style>{`
+                        @keyframes versePulse { 0% { box-shadow: 0 0 0 6px rgba(125,211,252,0.25); } 100% { box-shadow: 0 0 0 0 rgba(125,211,252,0); } }
+                        .passage-view [id*="${selectedVerseId}"]{ background: rgba(125,211,252,.25); border-radius: .25rem; padding: .1rem .15rem; animation: versePulse 1.5s ease-out 1; }
+                      `}</style>
+                    )}
+                    <div className="prose prose-invert max-w-none text-sm" dangerouslySetInnerHTML={{ __html: passage.content }} />
+                  </div>
+                )}
+              </div>
+            </GlassCard>
+            </div>
+
             {/* AI Commentary */}
             <GlassCard className="p-6 premium-shadow">
               <h3 className="text-lg font-semibold mb-4 flex items-center">
@@ -406,5 +831,42 @@ export default function ScriptureEngine() {
         </div>
       </div>
     </section>
+  );
+}
+
+function FavoritesList({ onAddToSermon }: { onAddToSermon: (v: { reference: string; text: string; version: string }) => void }) {
+  const { data, refetch } = useQuery<any>({
+    queryKey: ['/api/scripture-collections'],
+    queryFn: () => apiClient.get('/api/scripture-collections'),
+  });
+  const collections: any[] = data || [];
+  const myVerses = useMemo(() => {
+    const found = collections.find((c) => (c.name || '').toLowerCase() === 'my verses');
+    return (found?.verses || []).slice(0, 10);
+  }, [collections]);
+
+  return (
+    <div className="space-y-2">
+      {myVerses.length === 0 && (
+        <div className="text-sm text-gray-400">No saved verses yet. Bookmark verses from search results.</div>
+      )}
+      {myVerses.map((v: any, idx: number) => (
+        <div key={`${v.reference}-${idx}`} className="bg-celestial-800/30 rounded p-2 text-sm">
+          <div className="flex items-center justify-between">
+            <div className="mr-2">
+              <div className="text-divine-400 font-medium">{v.reference}</div>
+              <div className="text-gray-300 line-clamp-2">{v.text}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="h-auto p-0 text-divine-400" onClick={() => onAddToSermon({ reference: v.reference, text: v.text, version: v.version || 'N/A' })}>Add</Button>
+              <Button variant="ghost" size="sm" className="h-auto p-0 text-gray-400" onClick={() => navigator.clipboard.writeText(`"${v.text}" - ${v.reference} (${v.version || ''})`)}>Copy</Button>
+            </div>
+          </div>
+        </div>
+      ))}
+      <div className="text-right">
+        <Button variant="ghost" size="sm" className="h-auto p-0 text-gray-400" onClick={() => refetch()}>Refresh</Button>
+      </div>
+    </div>
   );
 }

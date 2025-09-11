@@ -1,4 +1,5 @@
 export interface BibleVerse {
+  id?: string;
   reference: string;
   text: string;
   version: string;
@@ -18,19 +19,112 @@ export interface CrossReference {
 class BibleApiService {
   private readonly apiKey: string;
   private readonly baseUrl = 'https://api.scripture.api.bible/v1';
+  private readonly defaultBibleId: string;
 
   constructor() {
     this.apiKey = process.env.BIBLE_API_KEY || '';
+    // Default to NIV if not provided
+    this.defaultBibleId = process.env.BIBLE_DEFAULT_ID || 'de4e12af7f28f599-02';
   }
 
-  async searchVerses(query: string, version = 'NIV', limit = 20): Promise<BibleSearchResult> {
+  // --- API.Bible helpers ---
+  private get headers() {
+    return { 'api-key': this.apiKey } as Record<string, string>;
+  }
+
+  async getBible(bibleId?: string): Promise<any> {
+    const id = bibleId || this.defaultBibleId;
+    const res = await fetch(`${this.baseUrl}/bibles/${id}`, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async listBibles(params?: { language?: string; abbreviation?: string; name?: string; ids?: string; includeFullDetails?: boolean; bibleId?: string }): Promise<any> {
+    const url = new URL(`${this.baseUrl}/bibles`);
+    if (params?.language) url.searchParams.set('language', params.language);
+    if (params?.abbreviation) url.searchParams.set('abbreviation', params.abbreviation);
+    if (params?.name) url.searchParams.set('name', params.name);
+    if (params?.ids) url.searchParams.set('ids', params.ids);
+    if (params?.includeFullDetails) url.searchParams.set('include-full-details', 'true');
+    const res = await fetch(url, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async getBooks(bibleId?: string): Promise<any> {
+    const id = bibleId || this.defaultBibleId;
+    const res = await fetch(`${this.baseUrl}/bibles/${id}/books`, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async getBook(bibleId: string, bookId: string): Promise<any> {
+    const res = await fetch(`${this.baseUrl}/bibles/${bibleId}/books/${bookId}`, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async getChaptersForBook(bibleId: string, bookId: string): Promise<any> {
+    const res = await fetch(`${this.baseUrl}/bibles/${bibleId}/books/${bookId}/chapters`, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async getChapter(bibleId: string, chapterId: string): Promise<any> {
+    const url = new URL(`${this.baseUrl}/bibles/${bibleId}/chapters/${chapterId}`);
+    url.searchParams.set('content-type', 'html');
+    url.searchParams.set('include-notes', 'false');
+    url.searchParams.set('include-titles', 'true');
+    url.searchParams.set('include-verse-numbers', 'true');
+    url.searchParams.set('include-chapter-numbers', 'false');
+    url.searchParams.set('include-verse-spans', 'true');
+    const res = await fetch(url, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async getChapterVerses(bibleId: string, chapterId: string): Promise<any> {
+    const res = await fetch(`${this.baseUrl}/bibles/${bibleId}/chapters/${chapterId}/verses`, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async getVerseById(bibleId: string, verseId: string): Promise<any> {
+    const url = new URL(`${this.baseUrl}/bibles/${bibleId}/verses/${verseId}`);
+    url.searchParams.set('content-type', 'text');
+    const res = await fetch(url, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async getPassage(bibleId: string, passageId: string): Promise<any> {
+    const url = new URL(`${this.baseUrl}/bibles/${bibleId}/passages/${passageId}`);
+    url.searchParams.set('content-type', 'html');
+    url.searchParams.set('include-notes', 'false');
+    url.searchParams.set('include-titles', 'true');
+    url.searchParams.set('include-verse-numbers', 'true');
+    url.searchParams.set('include-chapter-numbers', 'false');
+    url.searchParams.set('include-verse-spans', 'true');
+    const res = await fetch(url, { headers: this.headers });
+    if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async searchVerses(query: string, version = 'NIV', limit = 20, bibleId?: string): Promise<BibleSearchResult> {
     try {
-      // Using API.Bible for comprehensive search
-      const response = await fetch(`${this.baseUrl}/bibles/de4e12af7f28f599-02/search?query=${encodeURIComponent(query)}&limit=${limit}`, {
-        headers: {
-          'api-key': this.apiKey,
-        },
-      });
+      // Map common version → bibleId (fallback to default)
+      const mappedBibleId = bibleId || this.defaultBibleId;
+      const url = new URL(`${this.baseUrl}/bibles/${mappedBibleId}/search`);
+      url.searchParams.set('query', query);
+      url.searchParams.set('limit', String(limit));
+      // request plain text with no html tags
+      url.searchParams.set('include-verse-numbers', 'false');
+      url.searchParams.set('include-first-verse-numbers', 'false');
+      url.searchParams.set('include-footnotes', 'false');
+      url.searchParams.set('include-titles', 'false');
+      url.searchParams.set('include-chapter-numbers', 'false');
+      url.searchParams.set('include-verse-spans', 'false');
+      const response = await fetch(url, { headers: this.headers });
 
       if (!response.ok) {
         throw new Error(`Bible API error: ${response.statusText}`);
@@ -38,11 +132,12 @@ class BibleApiService {
 
       const data = await response.json();
       
-      const verses: BibleVerse[] = data.data?.verses?.map((verse: any) => ({
+      const verses: BibleVerse[] = (data.data?.verses || []).map((verse: any) => ({
+        id: verse.id,
         reference: verse.reference,
-        text: verse.text.replace(/<[^>]*>/g, ''), // Remove HTML tags
-        version: version,
-      })) || [];
+        text: (verse.text || '').replace(/<[^>]*>/g, ''),
+        version,
+      }));
 
       return {
         verses,
@@ -83,24 +178,29 @@ class BibleApiService {
   }
 
   async getVerse(reference: string, version = 'NIV'): Promise<BibleVerse | null> {
+    // Prefer API.Bible via search to resolve reference → verse text
+    try {
+      const result = await this.searchVerses(reference, version, 1);
+      const verse = result.verses[0];
+      if (verse) return verse;
+    } catch (e) {
+      // fall through to free fallback
+    }
     try {
       const response = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}`);
-      
-      if (!response.ok) {
-        return null;
-      }
-
+      if (!response.ok) return null;
       const data = await response.json();
-      
-      return {
-        reference: data.reference,
-        text: data.text,
-        version: version,
-      };
+      return { reference: data.reference, text: data.text, version };
     } catch (error) {
       console.error('Error fetching verse:', error);
       return null;
     }
+  }
+
+  async getVerseByReference(bibleId: string, ref: string, version = 'NIV'): Promise<BibleVerse | null> {
+    const result = await this.searchVerses(ref, version, 1, bibleId);
+    const verse = result.verses[0];
+    return verse || null;
   }
 
   async getCrossReferences(reference: string): Promise<CrossReference[]> {

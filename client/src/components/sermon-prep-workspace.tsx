@@ -8,7 +8,16 @@ import GlassCard from "@/components/ui/glass-card";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import type { Sermon } from "@shared/schema";
+import AISermonGenerator from "@/components/ai-sermon-generator";
+import SmartScriptureSuggestions from "@/components/smart-scripture-suggestions";
+import AutoSocialGraphics from "@/components/auto-social-graphics";
+import AIPrayerResponder from "@/components/ai-prayer-responder";
+import SermonRepurposer from "@/components/sermon-repurposer";
+import ChurchAnalytics from "@/components/church-analytics";
+import SocialAutomation from "@/components/social-automation";
+import SermonHighlights from "@/components/sermon-highlights";
+import AIPodcastGenerator from "@/components/ai-podcast-generator";
+import type { Sermon, VoiceRecording } from "@shared/schema";
 
 interface SermonSection {
   title: string;
@@ -40,6 +49,26 @@ export default function SermonPrepWorkspace() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Import verses saved in Scripture Engine on initial render
+  if (typeof window !== 'undefined') {
+    try {
+      const key = 'sermonDraftAdditions';
+      const additions = JSON.parse(localStorage.getItem(key) || '[]') as Array<{ reference: string; text: string; version: string }>;
+      if (additions.length) {
+        const mapped = additions.map((v, i) => ({
+          title: `${sections.length + i + 1}. ${v.reference}`,
+          content: v.text,
+          notes: `Version: ${v.version}`,
+        }));
+        if (mapped.length) {
+          setSections((prev) => [...prev, ...mapped]);
+          localStorage.removeItem(key);
+          toast({ title: 'Added verses from Scripture Engine', description: `${mapped.length} verse(s) appended to your outline.` });
+        }
+      }
+    } catch {}
+  }
 
   const { data: sermons = [] } = useQuery<Sermon[]>({
     queryKey: ['/api/sermons'],
@@ -99,12 +128,12 @@ export default function SermonPrepWorkspace() {
     },
   });
 
-  const { data: crossReferences = [] } = useQuery({
+  const { data: crossReferences = [] } = useQuery<Array<{ reference: string; text: string; relevance: number }>>({
     queryKey: ['/api/scripture/cross-references', scripture],
     enabled: !!scripture,
   });
 
-  const { data: voiceRecordings = [] } = useQuery({
+  const { data: voiceRecordings = [] } = useQuery<VoiceRecording[]>({
     queryKey: ['/api/voice-recordings'],
   });
 
@@ -123,6 +152,36 @@ export default function SermonPrepWorkspace() {
     const updatedSections = [...sections];
     updatedSections[index] = { ...updatedSections[index], [field]: value };
     setSections(updatedSections);
+  };
+
+  const handleSermonGenerated = (sermon: any) => {
+    // Update the sermon with AI-generated content
+    setTitle(sermon.title);
+    setScripture(sermon.scripture);
+    setTopic(sermon.theme);
+    
+    // Convert AI sermon structure to existing sections format
+    const newSections = sermon.mainPoints?.map((point: any, index: number) => ({
+      title: `${index + 1}. ${point.title}`,
+      content: point.explanation,
+      notes: `${point.application}\n\nIllustration: ${point.illustration}\n\nScripture: ${point.scripture}`,
+    })) || [];
+    
+    setSections(newSections);
+    
+    toast({
+      title: "🎯 Sermon Generated Successfully!",
+      description: `AI has created a complete sermon outline for "${sermon.title}"`,
+    });
+  };
+
+  const handleScriptureSelected = (reference: string, text: string) => {
+    // Auto-fill the scripture field when a verse is selected
+    setScripture(reference);
+    toast({
+      title: "Scripture Added!",
+      description: `${reference} has been added to your sermon`,
+    });
   };
 
   return (
@@ -144,6 +203,33 @@ export default function SermonPrepWorkspace() {
           </h2>
           <p className="text-gray-300 max-w-2xl mx-auto px-4">Create compelling, biblically-grounded sermons with AI assistance</p>
         </div>
+        
+        {/* AI Sermon Generator - KILLER FEATURE */}
+        <AISermonGenerator onSermonGenerated={handleSermonGenerated} />
+        
+        {/* Smart Scripture Suggestions - KILLER FEATURE #2 */}
+        <SmartScriptureSuggestions onScriptureSelected={handleScriptureSelected} />
+        
+        {/* Auto Social Media Graphics - KILLER FEATURE #3 */}
+        <AutoSocialGraphics sermonTitle={title} sermonScripture={scripture} />
+        
+        {/* AI Prayer Request Responder - KILLER FEATURE #4 */}
+        <AIPrayerResponder />
+        
+        {/* AI Sermon Repurposer - KILLER FEATURE #5 */}
+        <SermonRepurposer />
+        
+        {/* AI Church Analytics - KILLER FEATURE #6 */}
+        <ChurchAnalytics />
+        
+        {/* Social Media Automation - KILLER FEATURE #7 */}
+        <SocialAutomation />
+        
+        {/* Sermon Highlights Extractor - KILLER FEATURE #8 */}
+        <SermonHighlights />
+        
+        {/* AI Podcast Generator - KILLER FEATURE #9 */}
+        <AIPodcastGenerator />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Sermon Outline */}

@@ -29,6 +29,11 @@ class AudioProcessorService {
 
   constructor() {
     this.ensureUploadDir();
+    this.cleanupOldFiles().catch(() => {});
+    // Schedule daily cleanup
+    setInterval(() => {
+      this.cleanupOldFiles().catch(() => {});
+    }, 24 * 60 * 60 * 1000);
   }
 
   private async ensureUploadDir(): Promise<void> {
@@ -78,14 +83,13 @@ class AudioProcessorService {
 
   async transcribeAudio(audioPath: string): Promise<TranscriptionResult> {
     try {
-      // In production, integrate with OpenAI Whisper API or similar
+      // OpenAI Whisper transcription with proper multipart form
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'multipart/form-data',
         },
-        body: this.createFormData(audioPath),
+        body: await this.createFormData(audioPath),
       });
 
       if (!response.ok) {
@@ -160,11 +164,30 @@ class AudioProcessorService {
     console.log(`Adding background music to ${audioPath}`);
   }
 
-  private createFormData(audioPath: string): FormData {
-    // Create FormData for API upload
+  private async createFormData(audioPath: string): Promise<FormData> {
     const formData = new FormData();
-    // Implementation would depend on the specific API requirements
+    const buf = await fs.readFile(audioPath);
+    const blob = new Blob([buf], { type: 'audio/mpeg' });
+    formData.append('file', blob, path.basename(audioPath));
+    formData.append('model', 'whisper-1');
     return formData;
+  }
+
+  private async cleanupOldFiles(days = 30) {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    try {
+      const dir = this.uploadDir;
+      const files = await fs.readdir(dir).catch(() => []);
+      for (const name of files) {
+        const p = path.join(dir, name);
+        try {
+          const st = await fs.stat(p);
+          if (st.isFile() && st.mtimeMs < cutoff) {
+            await fs.unlink(p);
+          }
+        } catch {}
+      }
+    } catch {}
   }
 }
 

@@ -83,9 +83,11 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
+    const user: User = {
       id,
+      username: insertUser.username,
+      password: insertUser.password,
+      email: insertUser.email ?? null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -104,8 +106,14 @@ export class MemStorage implements IStorage {
   async createSermon(sermonData: InsertSermon & { userId: string }): Promise<Sermon> {
     const id = randomUUID();
     const sermon: Sermon = {
-      ...sermonData,
       id,
+      userId: sermonData.userId,
+      title: sermonData.title,
+      scripture: sermonData.scripture ?? null,
+      outline: sermonData.outline
+        ? { sections: (sermonData.outline as any).sections as { title: string; content: string; notes: string; }[] }
+        : null,
+      status: sermonData.status ?? 'draft',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -119,7 +127,12 @@ export class MemStorage implements IStorage {
     
     const updatedSermon: Sermon = {
       ...sermon,
-      ...sermonData,
+      title: sermonData.title ?? sermon.title,
+      scripture: sermonData.scripture ?? sermon.scripture,
+      outline: sermonData.outline
+        ? { sections: (sermonData.outline as any).sections as { title: string; content: string; notes: string; }[] }
+        : sermon.outline,
+      status: (sermonData.status ?? sermon.status) as Sermon["status"],
       updatedAt: new Date(),
     };
     this.sermons.set(id, updatedSermon);
@@ -142,8 +155,15 @@ export class MemStorage implements IStorage {
   async createPodcast(podcastData: InsertPodcast & { userId: string }): Promise<Podcast> {
     const id = randomUUID();
     const podcast: Podcast = {
-      ...podcastData,
       id,
+      userId: podcastData.userId,
+      sermonId: podcastData.sermonId ?? null,
+      title: podcastData.title,
+      description: podcastData.description ?? null,
+      audioUrl: podcastData.audioUrl ?? null,
+      duration: podcastData.duration ?? null,
+      status: 'processing',
+      playCount: 0,
       createdAt: new Date(),
     };
     this.podcasts.set(id, podcast);
@@ -177,11 +197,14 @@ export class MemStorage implements IStorage {
 
   async createScriptureCollection(collectionData: InsertScriptureCollection & { userId: string }): Promise<ScriptureCollection> {
     const id = randomUUID();
-    const collection: ScriptureCollection = {
-      ...collectionData,
+    const collection = {
       id,
+      userId: collectionData.userId,
+      name: collectionData.name,
+      description: collectionData.description ?? null,
+      verses: (collectionData.verses as unknown) ?? null,
       createdAt: new Date(),
-    };
+    } as unknown as ScriptureCollection;
     this.scriptureCollections.set(id, collection);
     return collection;
   }
@@ -192,7 +215,11 @@ export class MemStorage implements IStorage {
     
     const updatedCollection: ScriptureCollection = {
       ...collection,
-      ...collectionData,
+      name: collectionData.name ?? collection.name,
+      description: (collectionData.description ?? collection.description) as string | null,
+      verses: (collectionData.verses !== undefined
+        ? ((collectionData.verses as unknown) as { reference: string; text: string; version: string; }[] | null)
+        : collection.verses) as { reference: string; text: string; version: string; }[] | null,
     };
     this.scriptureCollections.set(id, updatedCollection);
     return updatedCollection;
@@ -214,8 +241,12 @@ export class MemStorage implements IStorage {
   async createGeneratedImage(imageData: InsertGeneratedImage & { userId: string }): Promise<GeneratedImage> {
     const id = randomUUID();
     const image: GeneratedImage = {
-      ...imageData,
       id,
+      userId: imageData.userId,
+      prompt: imageData.prompt,
+      imageUrl: imageData.imageUrl,
+      style: imageData.style ?? null,
+      aspectRatio: imageData.aspectRatio ?? null,
       createdAt: new Date(),
     };
     this.generatedImages.set(id, image);
@@ -238,8 +269,15 @@ export class MemStorage implements IStorage {
   async createGeneratedVideo(videoData: InsertGeneratedVideo & { userId: string }): Promise<GeneratedVideo> {
     const id = randomUUID();
     const video: GeneratedVideo = {
-      ...videoData,
       id,
+      userId: videoData.userId,
+      prompt: videoData.prompt,
+      videoUrl: videoData.videoUrl ?? null,
+      thumbnailUrl: videoData.thumbnailUrl ?? null,
+      duration: videoData.duration ?? null,
+      style: videoData.style ?? null,
+      aspectRatio: videoData.aspectRatio ?? null,
+      status: videoData.status ?? 'processing',
       createdAt: new Date(),
     };
     this.generatedVideos.set(id, video);
@@ -262,8 +300,13 @@ export class MemStorage implements IStorage {
   async createVoiceRecording(recordingData: InsertVoiceRecording & { userId: string }): Promise<VoiceRecording> {
     const id = randomUUID();
     const recording: VoiceRecording = {
-      ...recordingData,
       id,
+      userId: recordingData.userId,
+      sermonId: recordingData.sermonId ?? null,
+      title: recordingData.title ?? null,
+      audioUrl: recordingData.audioUrl,
+      transcription: recordingData.transcription ?? null,
+      duration: recordingData.duration ?? null,
       createdAt: new Date(),
     };
     this.voiceRecordings.set(id, recording);
@@ -287,4 +330,19 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DrizzleStorage } from './drizzle-storage';
+
+let storageImpl: IStorage;
+if (process.env.USE_DB === 'true' && process.env.DATABASE_URL) {
+  try {
+    storageImpl = new DrizzleStorage();
+    console.log('Using DrizzleStorage (database-backed) for sermons and collections');
+  } catch (e) {
+    console.warn('Falling back to MemStorage due to DB init error:', e);
+    storageImpl = new MemStorage();
+  }
+} else {
+  storageImpl = new MemStorage();
+}
+
+export const storage = storageImpl;

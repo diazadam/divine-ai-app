@@ -779,7 +779,7 @@ export default function ScriptureEngine() {
                 {false && (
                   <div ref={passageRef} className="mt-4 p-3 rounded bg-celestial-800/30 border border-white/10 passage-view">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm font-medium">{passage.reference}</div>
+                      <div className="text-sm font-medium">{passage?.reference || ''}</div>
                       <div className="flex items-center gap-2 text-xs">
                         <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => selectedVerseId && copyDeepLink('', selectedVerseId)}>Copy Verse Link</Button>
                         <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => { if (selectedVerseId && passageRef.current) { const el = passageRef.current.querySelector(`[id*="${selectedVerseId}"]`) as HTMLElement | null; el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }}>Scroll to Verse</Button>
@@ -791,7 +791,7 @@ export default function ScriptureEngine() {
                         .passage-view [id*="${selectedVerseId}"]{ background: rgba(125,211,252,.25); border-radius: .25rem; padding: .1rem .15rem; animation: versePulse 1.5s ease-out 1; }
                       `}</style>
                     )}
-                    <div className="prose prose-invert max-w-none text-sm" dangerouslySetInnerHTML={{ __html: passage.content }} />
+                    <div className="prose prose-invert max-w-none text-sm" dangerouslySetInnerHTML={{ __html: passage?.content || '' }} />
                   </div>
                 )}
               </div>

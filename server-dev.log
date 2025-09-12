@@ -1,0 +1,159 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+12:37:33 AM [express] 🚀 Divine AI Server running on http://localhost:5001
+12:37:33 AM [express] 📖 Bible API: ✓ Connected
+12:37:33 AM [express] 🤖 Gemini AI: ✓ Connected
+12:37:33 AM [express] 🎙️ OpenAI Audio: ✓ Connected
+12:38:13 AM [express] GET /api/health 503 in 12126ms :: {"status":"degraded","timestamp":"2025-09-11T…
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+2:35:22 AM [express] GET /api/auth/me 401 in 0ms :: {"error":"Unauthorized"}
+2:35:27 AM [express] GET /api/scripture-collections 304 in 1ms :: []
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:291:23)
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+2:35:27 AM [express] GET /api/bibles/de4e12af7f28f599-02/books 200 in 593ms :: {"data":[{"id":"GEN",…
+2:35:28 AM [express] GET /api/bibles 200 in 914ms :: {"data":[{"id":"472735b48a27b402-01","dblId":"4…
+Error with fallback Bible API: Error: Fallback Bible API error: Not Found
+    at BibleApiService.searchVersesFallback (/Users/adammach/divine-ai-app/server/services/bible-api.ts:159:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:291:23)
+2:35:28 AM [express] GET /api/bibles/de4e12af7f28f599-02/search 304 in 978ms :: {"verses":[],"total"…
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+2:35:29 AM [express] GET /api/scripture/cross-references/psalm%2042:11 304 in 2076ms :: [{"reference…
+2:40:34 AM [vite] hmr update /src/components/scripture-engine.tsx, /src/index.css?v=kL01ujsN90sLmmyYL3lXF
+2:40:59 AM [vite] hmr update /src/components/scripture-engine.tsx, /src/index.css?v=kL01ujsN90sLmmyYL3lXF
+2:42:33 AM [vite] hmr update /src/components/scripture-engine.tsx, /src/index.css?v=kL01ujsN90sLmmyYL3lXF
+2:43:03 AM [vite] hmr update /src/components/scripture-engine.tsx, /src/index.css?v=kL01ujsN90sLmmyYL3lXF
+2:44:25 AM [express] GET /api/auth/me 401 in 1ms :: {"error":"Unauthorized"}
+2:44:28 AM [express] GET /api/scripture-collections 304 in 1ms :: []
+2:44:28 AM [express] GET /api/bibles/de4e12af7f28f599-02/books 304 in 378ms :: {"data":[{"id":"GEN",…
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:291:23)
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+2:44:28 AM [express] GET /api/bibles 304 in 496ms :: {"data":[{"id":"472735b48a27b402-01","dblId":"4…
+Error with fallback Bible API: Error: Fallback Bible API error: Not Found
+    at BibleApiService.searchVersesFallback (/Users/adammach/divine-ai-app/server/services/bible-api.ts:159:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:291:23)
+2:44:28 AM [express] GET /api/bibles/de4e12af7f28f599-02/search 304 in 641ms :: {"verses":[],"total"…
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+2:44:29 AM [express] GET /api/scripture/cross-references/psalm%2042:11 304 in 1619ms :: [{"reference…
+2:44:39 AM [express] GET /api/bibles/de4e12af7f28f599-02/books/EST/chapters 200 in 817ms :: {"data":…
+2:44:44 AM [express] GET /api/bibles/de4e12af7f28f599-02/chapters/EST.1/verses 200 in 605ms :: {"dat…
+2:44:44 AM [express] GET /api/bibles/de4e12af7f28f599-02/passages/EST.1 200 in 605ms :: {"data":{"id…
+2:57:17 AM [express] GET /api/auth/me 401 in 1ms :: {"error":"Unauthorized"}
+2:57:17 AM [express] GET /api/scripture-collections 304 in 1ms :: []
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:291:23)
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+2:57:18 AM [express] GET /api/bibles/de4e12af7f28f599-02/chapters/EST.1/verses 304 in 764ms :: {"dat…
+2:57:18 AM [express] GET /api/bibles/de4e12af7f28f599-02/books 304 in 778ms :: {"data":[{"id":"GEN",…
+2:57:18 AM [express] GET /api/bibles/de4e12af7f28f599-02/passages/EST.1 200 in 765ms :: {"data":{"id…
+2:57:18 AM [express] GET /api/bibles/de4e12af7f28f599-02/chapters//verses 200 in 6ms
+2:57:18 AM [express] GET /api/bibles/de4e12af7f28f599-02/books//chapters 200 in 10ms
+2:57:18 AM [express] GET /api/bibles/de4e12af7f28f599-02/books/EST/chapters 304 in 108ms :: {"data":…
+2:57:18 AM [express] GET /api/bibles 304 in 940ms :: {"data":[{"id":"472735b48a27b402-01","dblId":"4…
+Error with fallback Bible API: Error: Fallback Bible API error: Not Found
+    at BibleApiService.searchVersesFallback (/Users/adammach/divine-ai-app/server/services/bible-api.ts:159:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:291:23)
+2:57:19 AM [express] GET /api/bibles/de4e12af7f28f599-02/search 304 in 1149ms :: {"verses":[],"total…
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+2:57:20 AM [express] GET /api/scripture/cross-references/psalm%2042:11 304 in 2197ms :: [{"reference…
+3:01:19 AM [vite] hmr update /src/components/scripture-engine.tsx, /src/index.css?v=kL01ujsN90sLmmyYL3lXF
+3:02:09 AM [vite] hmr update /src/components/scripture-engine.tsx, /src/index.css?v=kL01ujsN90sLmmyYL3lXF
+3:06:39 AM [vite] hmr update /src/components/podcast-studio.tsx, /src/index.css?v=kL01ujsN90sLmmyYL3lXF
+3:23:23 AM [express] GET /api/auth/me 401 in 1ms :: {"error":"Unauthorized"}
+3:23:27 AM [express] GET /api/scripture-collections 304 in 0ms :: []
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:291:23)
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+3:23:28 AM [express] GET /api/bibles/de4e12af7f28f599-02/books 304 in 593ms :: {"data":[{"id":"GEN",…
+Error with fallback Bible API: Error: Fallback Bible API error: Not Found
+    at BibleApiService.searchVersesFallback (/Users/adammach/divine-ai-app/server/services/bible-api.ts:159:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:291:23)
+3:23:28 AM [express] GET /api/bibles/de4e12af7f28f599-02/search 304 in 906ms :: {"verses":[],"total"…
+3:23:28 AM [express] GET /api/bibles 200 in 932ms :: {"data":[{"id":"472735b48a27b402-01","dblId":"4…
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+Error searching verses: Error: Bible API error: Bad Request
+    at BibleApiService.searchVerses (/Users/adammach/divine-ai-app/server/services/bible-api.ts:130:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BibleApiService.getVerse (/Users/adammach/divine-ai-app/server/services/bible-api.ts:183:22)
+    at async BibleApiService.getCrossReferences (/Users/adammach/divine-ai-app/server/services/bible-api.ts:222:23)
+    at async <anonymous> (/Users/adammach/divine-ai-app/server/routes.ts:339:25)
+3:23:29 AM [express] GET /api/scripture/cross-references/psalm%2042:11 304 in 2134ms :: [{"reference…
+3:23:31 AM [express] GET /api/bibles/de4e12af7f28f599-02/books/2KI/chapters 200 in 119ms :: {"data":…
+3:23:33 AM [express] GET /api/bibles/de4e12af7f28f599-02/chapters/2KI.22/verses 200 in 156ms :: {"da…
+3:23:33 AM [express] GET /api/bibles/de4e12af7f28f599-02/passages/2KI.22 200 in 419ms :: {"data":{"i…
+4:38:24 AM [express] GET /api/auth/me 401 in 1ms :: {"error":"Unauthorized"}

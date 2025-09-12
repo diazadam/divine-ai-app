@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  divine-ai-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5000:5000"
+      - "3000:3000"  # For Vite dev server
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BIBLE_API_KEY=${BIBLE_API_KEY}
+      - BIBLE_DEFAULT_ID=${BIBLE_DEFAULT_ID:-de4e12af7f28f599-02}
+      - REQUIRE_AUTH=${REQUIRE_AUTH:-false}
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules  # Anonymous volume for node_modules
+      - ./uploads:/workspace/uploads
+    working_dir: /workspace
+    command: npm run dev
+    stdin_open: true
+    tty: true
+

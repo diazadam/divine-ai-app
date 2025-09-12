@@ -8,7 +8,7 @@ export async function summarizeArticle(text: string): Promise<string> {
     const prompt = `Please summarize the following text concisely while maintaining key points:\n\n${text}`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt,
     });
 
@@ -29,7 +29,7 @@ Respond with JSON in this format:
 {'rating': number, 'confidence': number}`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
@@ -111,7 +111,7 @@ export async function generateImage(
     try {
         // IMPORTANT: only this gemini model supports image generation
         const response = await ai.models.generateContent({
-            model: "gemini-2.0-flash-preview-image-generation",
+            model: "gemini-1.5-pro",
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             config: {
                 responseModalities: [Modality.TEXT, Modality.IMAGE],
@@ -183,7 +183,7 @@ export async function generateAdvancedSermonOutline(topic: string, scripture: st
         }`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
@@ -266,7 +266,7 @@ export async function providePastoralGuidance(question: string, context?: string
             : question;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             config: {
                 systemInstruction: systemPrompt,
             },
@@ -295,7 +295,7 @@ export async function generateBiblicalInsights(passage: string): Promise<any> {
         }`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
@@ -359,7 +359,7 @@ export async function semanticScriptureSearch(query: string, context?: string): 
         }`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
@@ -428,7 +428,7 @@ export async function generateSermonIllustrations(theme: string, audience: strin
         }`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
@@ -487,7 +487,7 @@ export async function generatePodcastScript(sermonContent: string, duration: num
         }`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
@@ -533,7 +533,7 @@ export async function generateSermonVisualPrompts(theme: string, style: string =
         }`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",

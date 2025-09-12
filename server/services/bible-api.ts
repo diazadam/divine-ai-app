@@ -39,12 +39,13 @@ class BibleApiService {
     return res.json();
   }
 
-  async listBibles(params?: { language?: string; abbreviation?: string; name?: string; ids?: string; includeFullDetails?: boolean; bibleId?: string }): Promise<any> {
+  async listBibles(params?: { language?: string; abbreviation?: string; name?: string; ids?: string; includeFullDetails?: boolean; bibleId?: string; limit?: number }): Promise<any> {
     const url = new URL(`${this.baseUrl}/bibles`);
     if (params?.language) url.searchParams.set('language', params.language);
     if (params?.abbreviation) url.searchParams.set('abbreviation', params.abbreviation);
     if (params?.name) url.searchParams.set('name', params.name);
     if (params?.ids) url.searchParams.set('ids', params.ids);
+    if (typeof params?.limit === 'number') url.searchParams.set('limit', String(params.limit));
     if (params?.includeFullDetails) url.searchParams.set('include-full-details', 'true');
     const res = await fetch(url, { headers: this.headers });
     if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
@@ -112,6 +113,11 @@ class BibleApiService {
 
   async searchVerses(query: string, version = 'NIV', limit = 20, bibleId?: string): Promise<BibleSearchResult> {
     try {
+      if (!this.apiKey) {
+        console.warn('Bible API key not configured, using fallback');
+        return this.searchVersesFallback(query, version, limit);
+      }
+
       // Map common version → bibleId (fallback to default)
       const mappedBibleId = bibleId || this.defaultBibleId;
       const url = new URL(`${this.baseUrl}/bibles/${mappedBibleId}/search`);
@@ -127,7 +133,9 @@ class BibleApiService {
       const response = await fetch(url, { headers: this.headers });
 
       if (!response.ok) {
-        throw new Error(`Bible API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Bible API search error:', response.status, errorText);
+        throw new Error(`Bible API error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();

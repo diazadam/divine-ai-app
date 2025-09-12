@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { elevenLabsService } from './elevenlabs';
 
 export interface AudioProcessingOptions {
   noiseReduction?: boolean;
@@ -83,6 +84,10 @@ class AudioProcessorService {
 
   async transcribeAudio(audioPath: string): Promise<TranscriptionResult> {
     try {
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OpenAI API key not configured');
+      }
+
       // OpenAI Whisper transcription with proper multipart form
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
@@ -93,7 +98,9 @@ class AudioProcessorService {
       });
 
       if (!response.ok) {
-        throw new Error(`Transcription API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('OpenAI API error:', response.status, errorText);
+        throw new Error(`Transcription API error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -112,30 +119,52 @@ class AudioProcessorService {
     }
   }
 
-  async generateSpeech(text: string, voice = 'alloy'): Promise<Buffer> {
+  async generateSpeech(text: string, voice = 'alloy', useElevenLabs = false): Promise<Buffer> {
     try {
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'tts-1',
-          input: text,
-          voice: voice,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Speech generation API error: ${response.statusText}`);
+      // Use ElevenLabs if configured and requested
+      if (useElevenLabs && elevenLabsService.isConfigured()) {
+        return await this.generateSpeechElevenLabs(text, voice);
       }
-
-      return Buffer.from(await response.arrayBuffer());
+      
+      // Fallback to OpenAI
+      return await this.generateSpeechOpenAI(text, voice);
     } catch (error) {
       console.error('Error generating speech:', error);
       throw new Error('Failed to generate speech');
     }
+  }
+
+  private async generateSpeechOpenAI(text: string, voice = 'alloy'): Promise<Buffer> {
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'tts-1',
+        input: text,
+        voice: voice,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI Speech API error: ${response.statusText}`);
+    }
+
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  private async generateSpeechElevenLabs(text: string, voiceId: string): Promise<Buffer> {
+    // Use premium voice settings for best quality
+    const voiceSettings = {
+      stability: 0.5,
+      similarity_boost: 0.75,
+      style: 0.5,
+      use_speaker_boost: true
+    };
+
+    return await elevenLabsService.generateSpeech(text, voiceId, voiceSettings);
   }
 
   private async getAudioMetadata(audioPath: string): Promise<AudioMetadata> {

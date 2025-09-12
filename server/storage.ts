@@ -1,18 +1,18 @@
-import { 
-  type User, 
-  type InsertUser,
-  type Sermon,
-  type InsertSermon,
-  type Podcast,
-  type InsertPodcast,
-  type ScriptureCollection,
-  type InsertScriptureCollection,
-  type GeneratedImage,
-  type InsertGeneratedImage,
-  type GeneratedVideo,
-  type InsertGeneratedVideo,
-  type VoiceRecording,
-  type InsertVoiceRecording
+import {
+    type GeneratedImage,
+    type GeneratedVideo,
+    type InsertGeneratedImage,
+    type InsertGeneratedVideo,
+    type InsertPodcast,
+    type InsertScriptureCollection,
+    type InsertSermon,
+    type InsertUser,
+    type InsertVoiceRecording,
+    type Podcast,
+    type ScriptureCollection,
+    type Sermon,
+    type User,
+    type VoiceRecording
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -83,7 +83,8 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = {
+    const user: User = { 
+      ...insertUser, 
       id,
       username: insertUser.username,
       password: insertUser.password,

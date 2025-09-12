@@ -1,23 +1,23 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import AIPodcastGenerator from "@/components/ai-podcast-generator";
+import AIPrayerResponder from "@/components/ai-prayer-responder";
+import AISermonGenerator from "@/components/ai-sermon-generator";
+import AutoSocialGraphics from "@/components/auto-social-graphics";
+import ChurchAnalytics from "@/components/church-analytics";
+import SermonHighlights from "@/components/sermon-highlights";
+import SermonRepurposer from "@/components/sermon-repurposer";
+import SmartScriptureSuggestions from "@/components/smart-scripture-suggestions";
+import SocialAutomation from "@/components/social-automation";
 import { Button } from "@/components/ui/button";
+import GlassCard from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { List, Wand2, Save, Plus, Lightbulb, Mic, Play, ChevronLeft, Sparkles } from "lucide-react";
-import GlassCard from "@/components/ui/glass-card";
-import { apiRequest } from "@/lib/queryClient";
-import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import AISermonGenerator from "@/components/ai-sermon-generator";
-import SmartScriptureSuggestions from "@/components/smart-scripture-suggestions";
-import AutoSocialGraphics from "@/components/auto-social-graphics";
-import AIPrayerResponder from "@/components/ai-prayer-responder";
-import SermonRepurposer from "@/components/sermon-repurposer";
-import ChurchAnalytics from "@/components/church-analytics";
-import SocialAutomation from "@/components/social-automation";
-import SermonHighlights from "@/components/sermon-highlights";
-import AIPodcastGenerator from "@/components/ai-podcast-generator";
+import { apiRequest } from "@/lib/queryClient";
 import type { Sermon, VoiceRecording } from "@shared/schema";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, Lightbulb, List, Mic, Play, Plus, Save, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Link } from "wouter";
 
 interface SermonSection {
   title: string;

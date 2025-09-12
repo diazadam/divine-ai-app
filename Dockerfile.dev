@@ -1,0 +1,29 @@
+# Development Dockerfile for Divine AI
+FROM node:18-alpine
+
+# Install development tools
+RUN apk add --no-cache git bash curl
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (including dev dependencies)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose ports
+EXPOSE 5000 3000
+
+# Create non-root user
+RUN addgroup -g 1000 node && adduser -u 1000 -G node -s /bin/sh -D node || true
+RUN chown -R node:node /workspace
+USER node
+
+# Default command for development
+CMD ["npm", "run", "dev"]
+

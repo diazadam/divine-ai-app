@@ -20,6 +20,20 @@ export interface Sentiment {
     confidence: number;
 }
 
+export async function createChat(messages: Array<{role: string, content: string}>): Promise<string> {
+    try {
+        const userMessage = messages.find(m => m.role === 'user')?.content || '';
+        const response = await ai.models.generateContent({
+            model: "gemini-1.5-flash",
+            contents: userMessage,
+        });
+        return response.text || "Failed to generate content";
+    } catch (error) {
+        console.error('Gemini chat error:', error);
+        return "Error generating AI content";
+    }
+}
+
 export async function analyzeSentiment(text: string): Promise<Sentiment> {
     try {
         const systemPrompt = `You are a sentiment analysis expert. 

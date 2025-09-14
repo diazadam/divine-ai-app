@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { Podcast as PodcastType } from "@shared/schema";
+import { AudioPlayer } from "@/components/ui/audio-player";
+import type { Podcast as BasePodcastType } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     ChevronLeft,
@@ -18,6 +19,17 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
+
+// Extend Podcast type with additional fields from API response
+interface PodcastType extends BasePodcastType {
+  hosts?: Array<{
+    name: string;
+    voiceId: string;
+    voiceName: string;
+    gender: string;
+  }>;
+  voiceEngine?: string;
+}
 
 // ONLY YOUR 9 ELEVENLABS VOICES - NO OTHER VOICES!
 const ELEVENLABS_VOICES = [
@@ -50,6 +62,7 @@ export default function PodcastStudio() {
   ]);
   
   const [showLibrary, setShowLibrary] = useState(false);
+  const [playingPodcast, setPlayingPodcast] = useState<PodcastType | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -135,34 +148,33 @@ export default function PodcastStudio() {
     console.log(`✅ Host ${hostIndex + 1} voice set to: ${voice.name} (${voice.id})`);
   };
 
-  const playVoicePreview = (voice: any) => {
-    console.log(`🔊 Playing preview for ElevenLabs voice: ${voice.name} (${voice.id})`);
+  const playVoicePreview = async (voice: any) => {
+    console.log(`🔊 Requesting ElevenLabs preview for: ${voice.name} (${voice.id})`);
     
-    // Enhanced browser speech synthesis preview
-    const utterance = new SpeechSynthesisUtterance(`Hello, I'm ${voice.name}. This is a preview of your premium ElevenLabs voice for podcast creation!`);
-    
-    const voices = speechSynthesis.getVoices();
-    let selectedVoice;
-    
-    if (voice.gender === 'female') {
-      selectedVoice = voices.find(v => 
-        v.name.toLowerCase().includes('samantha') ||
-        v.name.toLowerCase().includes('alex') ||
-        v.name.toLowerCase().includes('female')
-      );
-    } else {
-      selectedVoice = voices.find(v => 
-        v.name.toLowerCase().includes('daniel') ||
-        v.name.toLowerCase().includes('male')
-      );
+    try {
+      // Request actual ElevenLabs voice preview from backend
+      const response = await fetch('/api/voices/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          voiceId: voice.id,
+          text: `Hello, I'm ${voice.name}. This is a preview of your premium ElevenLabs voice for podcast creation!`
+        })
+      });
+
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+      } else {
+        // If preview fails, show an alert instead of using browser synthesis
+        alert(`Voice preview temporarily unavailable. ${voice.name} is a premium ElevenLabs voice that will be used for your podcast.`);
+      }
+    } catch (error) {
+      console.error('Preview error:', error);
+      alert(`${voice.name} is a premium ElevenLabs voice. Preview will be available in the generated podcast.`);
     }
-    
-    if (selectedVoice) utterance.voice = selectedVoice;
-    utterance.rate = 0.9;
-    utterance.pitch = voice.gender === 'female' ? 1.1 : 0.9;
-    
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utterance);
   };
 
   return (
@@ -258,27 +270,55 @@ export default function PodcastStudio() {
             </div>
 
             {podcasts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {podcasts.map((podcast) => (
-                  <div key={podcast.id} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105">
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg shadow-green-500/30 border-none text-white font-bold">
-                        ✅ Ready
-                      </Badge>
-                      <div className="flex space-x-2">
-                        <button className="bg-white/10 hover:bg-green-500/20 text-pink-100 hover:text-white transition-all duration-300 rounded-xl shadow-lg hover:shadow-green-500/30 p-2">
-                          <Play className="w-4 h-4" />
-                        </button>
-                        <button className="bg-white/10 hover:bg-blue-500/20 text-pink-100 hover:text-white transition-all duration-300 rounded-xl shadow-lg hover:shadow-blue-500/30 p-2">
-                          <Download className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-3 drop-shadow-lg">{podcast.title}</h3>
-                    <p className="text-pink-100/80 mb-4">🕒 20:00</p>
+              <>
+                {/* Audio Player - Shows when a podcast is playing */}
+                {playingPodcast && (
+                  <div className="mb-8">
+                    <AudioPlayer
+                      audioUrl={playingPodcast.audioUrl}
+                      title={playingPodcast.title}
+                      description={playingPodcast.description || undefined}
+                      duration={playingPodcast.duration || undefined}
+                      hosts={playingPodcast.hosts?.map(h => ({ name: h.name, voiceName: h.voiceName }))}
+                      onClose={() => setPlayingPodcast(null)}
+                      showWaveform={true}
+                    />
                   </div>
-                ))}
-              </div>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {podcasts.map((podcast) => (
+                    <div key={podcast.id} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105">
+                      <div className="flex items-center justify-between mb-4">
+                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg shadow-green-500/30 border-none text-white font-bold">
+                          ✅ Ready
+                        </Badge>
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => setPlayingPodcast(podcast)}
+                            className="bg-white/10 hover:bg-green-500/20 text-pink-100 hover:text-white transition-all duration-300 rounded-xl shadow-lg hover:shadow-green-500/30 p-2"
+                          >
+                            <Play className="w-4 h-4" />
+                          </button>
+                          <a 
+                            href={podcast.audioUrl}
+                            download={`${podcast.title}.mp3`}
+                            className="bg-white/10 hover:bg-blue-500/20 text-pink-100 hover:text-white transition-all duration-300 rounded-xl shadow-lg hover:shadow-blue-500/30 p-2 inline-block"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-3 drop-shadow-lg">{podcast.title}</h3>
+                      <p className="text-pink-100/80 mb-2">{podcast.description}</p>
+                      <p className="text-pink-100/60 text-sm">🕒 {Math.floor((podcast.duration || 0) / 60)}:{String((podcast.duration || 0) % 60).padStart(2, '0')}</p>
+                      {podcast.hosts && podcast.hosts.length > 0 && (
+                        <p className="text-green-300 text-xs mt-2">🎙️ ElevenLabs: {podcast.hosts.map(h => h.voiceName).join(', ')}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="text-center py-20">
                 <div className="bg-gradient-to-br from-pink-500 to-purple-600 w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl animate-bounce">

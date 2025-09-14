@@ -119,18 +119,18 @@ class AudioProcessorService {
     }
   }
 
-  async generateSpeech(text: string, voice = 'alloy', useElevenLabs = false): Promise<Buffer> {
+  async generateSpeech(text: string, voice: string, useElevenLabs = true): Promise<Buffer> {
     try {
-      // Use ElevenLabs if configured and requested
-      if (useElevenLabs && elevenLabsService.isConfigured()) {
-        return await this.generateSpeechElevenLabs(text, voice);
+      // ALWAYS use ElevenLabs - no fallback
+      if (!elevenLabsService.isConfigured()) {
+        throw new Error('ElevenLabs API is not configured. Please set ELEVENLABS_API_KEY environment variable.');
       }
       
-      // Fallback to OpenAI
-      return await this.generateSpeechOpenAI(text, voice);
+      console.log(`🎙️ Generating speech with ElevenLabs voice: ${voice}`);
+      return await this.generateSpeechElevenLabs(text, voice);
     } catch (error) {
-      console.error('Error generating speech:', error);
-      throw new Error('Failed to generate speech');
+      console.error('Error generating speech with ElevenLabs:', error);
+      throw new Error(`Failed to generate speech with ElevenLabs: ${error}`);
     }
   }
 

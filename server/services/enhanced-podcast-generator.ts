@@ -33,10 +33,28 @@ interface EpisodeStructure {
 export class EnhancedPodcastGenerator {
   private huggingFaceToken: string;
   private hf: HfInference;
+  private textModel: string;
 
   constructor() {
     this.huggingFaceToken = process.env.HUGGINGFACE_TOKEN || '';
     this.hf = new HfInference(this.huggingFaceToken);
+    this.textModel = process.env.HF_TEXT_MODEL || 'HuggingFaceH4/zephyr-7b-beta';
+  }
+
+  // Normalize provider output shapes to a single string
+  private extractGeneratedText(output: any): string {
+    try {
+      if (!output) return '';
+      if (typeof output === 'string') return output;
+      if (Array.isArray(output) && output.length > 0) {
+        const first = output[0];
+        if (first && typeof first.generated_text === 'string') return first.generated_text;
+      }
+      if (typeof output === 'object' && typeof output.generated_text === 'string') {
+        return output.generated_text;
+      }
+    } catch {}
+    return '';
   }
 
   // Create detailed host personalities
@@ -46,7 +64,7 @@ export class EnhancedPodcastGenerator {
         name: hosts[0]?.name || 'Alex',
         personality: 'Enthusiastic and curious host who asks great questions and keeps the energy high',
         expertise: 'General hosting, asking insightful questions, keeping conversation flowing',
-        speakingStyle: 'Energetic, uses "That's fascinating!", "Tell me more about...", frequently acknowledges guest points',
+        speakingStyle: 'Energetic, uses "That\'s fascinating!", "Tell me more about...", frequently acknowledges guest points',
         catchphrases: ['That\'s incredible!', 'I love that perspective', 'Our listeners are going to find this so valuable'],
         voiceId: hosts[0]?.voice || 'QTGiyJvep6bcx4WD1qAq',
         voiceName: hosts[0]?.voiceName || 'Brad'
@@ -55,8 +73,8 @@ export class EnhancedPodcastGenerator {
         name: hosts[1]?.name || 'Sarah',
         personality: 'Thoughtful expert who provides deep insights and practical applications',
         expertise: 'Subject matter expert, provides detailed explanations, offers practical advice',
-        speakingStyle: 'Thoughtful, uses "From my experience...", "What I\'ve found is...", provides specific examples',
-        catchphrases: ['In my experience', 'What\'s really interesting is', 'Let me give you a practical example'],
+        speakingStyle: 'Thoughtful, uses "From my experience...", "What I have found is...", provides specific examples',
+        catchphrases: ['In my experience', 'What is really interesting is', 'Let me give you a practical example'],
         voiceId: hosts[1]?.voice || 'uYXf8XasLslADfZ2MB4u',
         voiceName: hosts[1]?.voiceName || 'Hope'
       },
@@ -65,7 +83,7 @@ export class EnhancedPodcastGenerator {
         personality: 'Analytical thinker who brings different perspectives and challenges ideas constructively',
         expertise: 'Critical thinking, alternative perspectives, connecting concepts',
         speakingStyle: 'Analytical, uses "On the other hand...", "That raises an interesting question...", builds on ideas',
-        catchphrases: ['That\'s a great point, and it makes me think', 'Building on that idea', 'From another angle'],
+        catchphrases: ['That is a great point, and it makes me think', 'Building on that idea', 'From another angle'],
         voiceId: hosts[2]?.voice || 'Dslrhjl3ZpzrctukrQSN',
         voiceName: hosts[2]?.voiceName || 'Will'
       }
@@ -79,25 +97,32 @@ export class EnhancedPodcastGenerator {
     const targetWords = duration * 150; // ~150 words per minute
     
     // Use HuggingFace for advanced conversation modeling first
-    let conversationModel = null;
+    let conversationText: string | null = null;
     try {
       console.log('🤖 Using HuggingFace conversation models for enhanced dialogue generation');
       
-      // Generate initial conversation flow using HuggingFace's conversational AI
+      // Generate initial conversation flow using HuggingFace's Pro models
       const conversationPrompt = `Generate a natural, engaging podcast conversation outline about "${topic}" between ${hosts.length} hosts: ${hosts.map(h => h.name).join(', ')}. Focus on realistic dialogue flow and natural interactions.`;
       
-      conversationModel = await this.hf.textGeneration({
-        model: 'microsoft/DialoGPT-large',
+      // Use HuggingFace Inference Providers (Pro feature)
+      const hfResult = await this.hf.textGeneration({
+        model: this.textModel,
         inputs: conversationPrompt,
         parameters: {
-          max_new_tokens: 200,
-          temperature: 0.7,
-          repetition_penalty: 1.1,
+          max_new_tokens: 300,
+          temperature: 0.8,
+          repetition_penalty: 1.2,
+          top_p: 0.9
         }
       });
+      conversationText = this.extractGeneratedText(hfResult);
       console.log('✅ HuggingFace conversation model provided enhanced dialogue structure');
-    } catch (error) {
-      console.log('⚠️  HuggingFace conversation model unavailable, using Gemini fallback');
+    } catch (error: any) {
+      console.log('⚠️  HuggingFace conversation model error:', error?.message || error);
+      if (error?.response) {
+        try { console.log('HF response:', error.response); } catch {}
+      }
+      console.log('Using Gemini fallback for conversation modeling');
     }
     
     // Generate detailed episode outline with Gemini (enhanced by HF insights)
@@ -106,7 +131,7 @@ export class EnhancedPodcastGenerator {
 HOSTS:
 ${hosts.map(h => `- ${h.name}: ${h.personality} (${h.expertise})`).join('\n')}
 
-${conversationModel ? `CONVERSATION INSIGHTS FROM AI MODEL:\n${conversationModel.generated_text?.substring(0, 300)}...\n\n` : ''}
+${conversationText ? `CONVERSATION INSIGHTS FROM AI MODEL:\n${conversationText.substring(0, 300)}...\n\n` : ''}
 
 REQUIREMENTS:
 - Target duration: ${duration} minutes (~${targetWords} words)
@@ -235,7 +260,10 @@ Return just the topic titles, one per line.`;
 
   // Generate smooth transitions between segments
   async generateTransition(fromTopic: string, toTopic: string, hosts: PodcastHost[]): Promise<string> {
-    const transitionHost = hosts[Math.floor(Math.random() * hosts.length)];
+    // Use default host if none provided
+    const transitionHost = hosts.length > 0 
+      ? hosts[Math.floor(Math.random() * hosts.length)]
+      : { name: "Host", personality: "engaging", speakingStyle: "conversational" };
     
     const prompt = `Create a smooth 1-2 line transition from "${fromTopic}" to "${toTopic}".
 
@@ -288,9 +316,9 @@ Format as: "${transitionHost.name}: [transition dialogue]"`;
   // Enhanced emotion detection using HuggingFace sentiment analysis
   async detectEmotion(content: string): Promise<ConversationSegment['emotion']> {
     try {
-      // Use HuggingFace emotion classification model
+      // Use HuggingFace Pro emotion classification models
       const emotionResult = await this.hf.textClassification({
-        model: 'j-hartmann/emotion-english-distilroberta-base',
+        model: process.env.HF_EMOTION_MODEL || 'cardiffnlp/twitter-roberta-base-emotion-latest',
         inputs: content
       });
       
@@ -315,7 +343,8 @@ Format as: "${transitionHost.name}: [transition dialogue]"`;
         }
       }
     } catch (error) {
-      console.log('⚠️  HuggingFace emotion detection unavailable, using fallback');
+      console.log('⚠️  HuggingFace emotion detection error:', error);
+      console.log('Using fallback emotion detection method');
     }
     
     return this.detectEmotionFallback(content);
@@ -354,8 +383,8 @@ Format as: "${transitionHost.name}: [transition dialogue]"`;
     const lowerContent = content.toLowerCase();
     
     if (lowerContent.includes('?')) return 'question';
-    if (lowerContent.includes('exactly') || lowerContent.includes('wow') || lowerContent.includes('that\'s')) return 'reaction';
-    if (lowerContent.includes('let\'s talk about') || lowerContent.includes('moving on')) return 'transition';
+    if (lowerContent.includes('exactly') || lowerContent.includes('wow') || lowerContent.includes('that is')) return 'reaction';
+    if (lowerContent.includes('let us talk about') || lowerContent.includes('moving on')) return 'transition';
     if (lowerContent.includes('to wrap up') || lowerContent.includes('thank you')) return 'conclusion';
     
     return 'statement';

@@ -1,0 +1,262 @@
+/* Enhanced Scripture Reading Styles */
+
+/* Custom font imports for better reading experience */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Playfair+Display:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
+
+/* Reading mode styles */
+.scripture-reader {
+  @apply transition-all duration-300;
+}
+
+.scripture-reader.devotional-mode {
+  @apply text-lg leading-relaxed;
+}
+
+.scripture-reader.study-mode {
+  @apply text-base leading-normal;
+}
+
+.scripture-reader.reference-mode {
+  @apply text-sm leading-snug;
+}
+
+/* Typography variants */
+.scripture-text-inter {
+  font-family: 'Inter', sans-serif;
+}
+
+.scripture-text-georgia {
+  font-family: 'Georgia', serif;
+}
+
+.scripture-text-times {
+  font-family: 'Times New Roman', serif;
+}
+
+.scripture-text-crimson {
+  font-family: 'Crimson Text', serif;
+}
+
+.scripture-text-playfair {
+  font-family: 'Playfair Display', serif;
+}
+
+.scripture-text-source-serif {
+  font-family: 'Source Serif 4', serif;
+}
+
+/* Color scheme variations */
+.scripture-theme-default {
+  @apply bg-gradient-to-br from-slate-900 to-slate-800 text-gray-100;
+}
+
+.scripture-theme-sepia {
+  background: linear-gradient(135deg, #f4f1e8 0%, #e8dcc0 100%);
+  @apply text-amber-900;
+}
+
+.scripture-theme-dark {
+  @apply bg-black text-white;
+}
+
+.scripture-theme-contrast {
+  @apply bg-white text-black;
+}
+
+/* Verse highlighting and animations */
+.verse-highlight {
+  @apply bg-purple-500/20 border-l-4 border-purple-500 pl-2 py-1 rounded-r transition-all duration-300;
+  animation: verseGlow 2s ease-in-out;
+}
+
+.verse-bookmark {
+  @apply bg-yellow-500/20 border-l-4 border-yellow-500 pl-2 py-1 rounded-r;
+}
+
+.verse-note {
+  @apply bg-blue-500/20 border-l-4 border-blue-500 pl-2 py-1 rounded-r;
+}
+
+@keyframes verseGlow {
+  0% { 
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.3);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(139, 92, 246, 0.2);
+    transform: scale(1.02);
+  }
+  100% { 
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+    transform: scale(1);
+  }
+}
+
+/* Enhanced verse numbers */
+.verse-number {
+  @apply inline-block w-6 h-6 text-xs bg-purple-600/30 text-purple-300 rounded-full flex items-center justify-center mr-2 font-medium;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cross reference links */
+.cross-ref-link {
+  @apply text-purple-400 hover:text-purple-300 underline decoration-dotted underline-offset-2 cursor-pointer transition-colors;
+}
+
+/* Search result highlighting */
+.search-highlight {
+  @apply bg-yellow-400/30 text-yellow-100 rounded px-1;
+}
+
+/* Reading progress indicator */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+  transition: width 0.3s ease;
+  z-index: 50;
+}
+
+/* Verse actions toolbar */
+.verse-actions {
+  @apply opacity-0 group-hover:opacity-100 transition-opacity duration-200;
+  @apply absolute right-2 top-2 flex items-center space-x-1;
+}
+
+.verse-actions button {
+  @apply bg-black/50 hover:bg-black/70 text-white p-1 rounded text-xs;
+}
+
+/* Enhanced tooltips */
+.scripture-tooltip {
+  @apply absolute z-10 bg-black/90 text-white text-xs rounded px-2 py-1 pointer-events-none;
+  @apply opacity-0 transition-opacity duration-200;
+}
+
+.scripture-tooltip.visible {
+  @apply opacity-100;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .scripture-reader {
+    @apply px-4 text-base leading-relaxed;
+  }
+  
+  .verse-actions {
+    @apply opacity-100 relative right-auto top-auto mt-2;
+  }
+}
+
+/* Print styles */
+@media print {
+  .scripture-reader {
+    @apply bg-white text-black;
+  }
+  
+  .verse-actions,
+  .scripture-toolbar {
+    @apply hidden;
+  }
+  
+  .verse-highlight,
+  .verse-bookmark,
+  .verse-note {
+    @apply border-l-2 border-gray-400;
+  }
+}
+
+/* Focus styles for accessibility */
+.scripture-reader:focus-within {
+  @apply outline-none ring-2 ring-purple-500/50 ring-offset-2 ring-offset-slate-900;
+}
+
+/* Custom scrollbar for reading area */
+.scripture-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scripture-content::-webkit-scrollbar-track {
+  @apply bg-slate-800 rounded-lg;
+}
+
+.scripture-content::-webkit-scrollbar-thumb {
+  @apply bg-purple-600 rounded-lg;
+}
+
+.scripture-content::-webkit-scrollbar-thumb:hover {
+  @apply bg-purple-500;
+}
+
+/* Enhanced blockquote styles */
+.scripture-quote {
+  @apply border-l-4 border-purple-500 pl-6 py-4 my-6 italic text-lg;
+  @apply bg-gradient-to-r from-purple-500/10 to-transparent rounded-r-lg;
+}
+
+/* Chapter navigation arrows */
+.chapter-nav {
+  @apply fixed top-1/2 transform -translate-y-1/2 z-40;
+  @apply bg-black/50 hover:bg-black/70 text-white p-3 rounded-full;
+  @apply opacity-60 hover:opacity-100 transition-all duration-200;
+}
+
+.chapter-nav.prev {
+  @apply left-4;
+}
+
+.chapter-nav.next {
+  @apply right-4;
+}
+
+/* Study mode enhancements */
+.study-mode .scripture-text {
+  @apply space-y-4;
+}
+
+.study-mode .verse {
+  @apply relative hover:bg-slate-800/50 rounded-lg p-2 -m-2 transition-colors;
+}
+
+.study-mode .verse.group {
+  /* This class will be applied directly in the HTML */
+}
+
+.study-mode .verse:hover .verse-actions {
+  @apply opacity-100;
+}
+
+/* Loading states */
+.scripture-loading {
+  @apply animate-pulse space-y-4;
+}
+
+.scripture-loading .line {
+  @apply h-4 bg-slate-700 rounded;
+}
+
+.scripture-loading .line:nth-child(odd) {
+  @apply w-full;
+}
+
+.scripture-loading .line:nth-child(even) {
+  @apply w-5/6;
+}
+
+/* Smooth transitions */
+.scripture-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Enhanced glass morphism */
+.scripture-glass {
+  @apply bg-white/5 backdrop-blur-md border border-white/10;
+  @apply shadow-2xl shadow-purple-500/20;
+}
+
+/* Text selection styling */
+.scripture-reader ::selection {
+  @apply bg-purple-500/30 text-purple-100;
+}

@@ -71,6 +71,7 @@ Generate professional podcasts from simple prompts:
 - **Topic Expertise**: AI hosts with specialized knowledge areas
 - **Realistic Flow**: Questions, reactions, agreements, transitions
 - **Professional Audio**: Combined into single high-quality MP3
+- **Studio Polish (Optional)**: Loudness normalization and background music bed with gentle ducking (ffmpeg)
 
 ### **Voice Technology**
 Premium ElevenLabs integration:
@@ -78,6 +79,57 @@ Premium ElevenLabs integration:
 - **Voice Preview**: Test any voice with custom text
 - **Advanced Settings**: Stability, similarity boost, speaker enhancement
 - **Real-time Generation**: Instant audio synthesis
+
+### Studio Polish (Optional)
+
+You can enable a background music bed and post-processing on the main `/api/podcasts/generate` endpoint:
+
+- Backend accepts `backgroundMusic: true` in the POST body.
+- Optionally pass `bedKey` to select a file from `uploads/beds/<bedKey>.mp3`.
+- Provide a bed track at one of:
+  - Set `PODCAST_BED_PATH` to the absolute path of an MP3 bed.
+  - Place a file at `uploads/beds/default_bed.mp3`.
+
+To generate built-in royalty-free beds locally (synthetic, no downloads), run:
+
+```
+npm run fetch:beds
+```
+
+This uses ffmpeg tone/noise sources to create subtle beds:
+- `soft_ambient.mp3`, `lofi.mp3`, `piano_warm.mp3`, `cinematic_light.mp3`, and `default_bed.mp3`
+Set duration via `BED_DURATION_SEC=600 npm run fetch:beds` for 10 minutes.
+
+Alternatively, download your own CC0/public-domain beds:
+
+```
+npm run download:beds -- --url https://example.com/soft_ambient_cc0.mp3 --key soft_ambient
+
+# Or from a JSON list
+npm run download:beds -- --list beds.json
+
+# beds.json
+[
+  { "key": "lofi", "url": "https://your-source.example/lofi_cc0.mp3" },
+  { "key": "piano_warm", "url": "https://your-source.example/piano_warm_cc0.mp3" }
+]
+```
+
+Always ensure you have rights to use and redistribute audio beds (prefer CC0 or public-domain sources).
+
+Curated public-domain (FreePD) list included:
+
+```
+npm run download:beds:curated
+```
+
+This pulls a small selection from FreePD (public domain). If any URL changes upstream, update `scripts/curated-beds.json` or supply your own list.
+- Requires `ffmpeg` on the server (`ffmpeg -version`).
+
+Processing pipeline when enabled:
+- Speech: high-pass/low-pass, loudness normalization (EBU R128), light compression.
+- Bed: low volume under speech.
+- Mixed and encoded to MP3 (160 kbps, 44.1 kHz).
 
 ### **Enterprise Analytics**
 Track podcast performance:

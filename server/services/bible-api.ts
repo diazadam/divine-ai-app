@@ -39,13 +39,12 @@ class BibleApiService {
     return res.json();
   }
 
-  async listBibles(params?: { language?: string; abbreviation?: string; name?: string; ids?: string; includeFullDetails?: boolean; bibleId?: string; limit?: number }): Promise<any> {
+  async listBibles(params?: { language?: string; abbreviation?: string; name?: string; ids?: string; includeFullDetails?: boolean; bibleId?: string }): Promise<any> {
     const url = new URL(`${this.baseUrl}/bibles`);
     if (params?.language) url.searchParams.set('language', params.language);
     if (params?.abbreviation) url.searchParams.set('abbreviation', params.abbreviation);
     if (params?.name) url.searchParams.set('name', params.name);
     if (params?.ids) url.searchParams.set('ids', params.ids);
-    if (typeof params?.limit === 'number') url.searchParams.set('limit', String(params.limit));
     if (params?.includeFullDetails) url.searchParams.set('include-full-details', 'true');
     const res = await fetch(url, { headers: this.headers });
     if (!res.ok) throw new Error(`Bible API error: ${res.status} ${res.statusText}`);
@@ -118,19 +117,21 @@ class BibleApiService {
         return this.searchVersesFallback(query, version, limit);
       }
 
-      // Map common version → bibleId (fallback to default)
+      // Validate and sanitize query
+      const sanitizedQuery = query.trim();
+      if (!sanitizedQuery || sanitizedQuery.length < 2) {
+        console.warn('Search query too short or empty');
+        return { verses: [], total: 0 };
+      }
+
+      // Use the correct Bible ID
       const mappedBibleId = bibleId || this.defaultBibleId;
-      const url = new URL(`${this.baseUrl}/bibles/${mappedBibleId}/search`);
-      url.searchParams.set('query', query);
-      url.searchParams.set('limit', String(limit));
-      // request plain text with no html tags
-      url.searchParams.set('include-verse-numbers', 'false');
-      url.searchParams.set('include-first-verse-numbers', 'false');
-      url.searchParams.set('include-footnotes', 'false');
-      url.searchParams.set('include-titles', 'false');
-      url.searchParams.set('include-chapter-numbers', 'false');
-      url.searchParams.set('include-verse-spans', 'false');
-      const response = await fetch(url, { headers: this.headers });
+      
+      // Construct the search URL properly
+      const searchUrl = `${this.baseUrl}/bibles/${mappedBibleId}/search?query=${encodeURIComponent(sanitizedQuery)}&limit=${limit}&offset=0`;
+      
+      console.log('Bible API search URL:', searchUrl);
+      const response = await fetch(searchUrl, { headers: this.headers });
 
       if (!response.ok) {
         const errorText = await response.text();

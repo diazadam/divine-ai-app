@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Instagram, Facebook, Twitter, Calendar, Clock, Share2, Sparkles, Settings, CheckCircle } from "lucide-react";
+import { Instagram, Facebook, Twitter, Calendar, Clock, Share2, Sparkles, Settings, CheckCircle, Brain, MessageCircle, Zap } from "lucide-react";
 import GlassCard from "@/components/ui/glass-card";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -59,6 +59,53 @@ export default function SocialAutomation() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState("");
   const [postType, setPostType] = useState<'verse' | 'prayer' | 'inspiration' | 'sermon-clip'>('verse');
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<string>("");
+
+  // Advanced OpenAI Features
+  const theologicalAnalysisMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const response = await fetch('/api/theology/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: `Analyze this social media content for theological accuracy and suggest improvements: ${content}`,
+          includeHistorical: true,
+          includeCitations: true
+        })
+      });
+      return response.json();
+    }
+  });
+
+  const aiContentOptimizationMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Optimize this social media content for engagement while maintaining theological integrity: ${content}`,
+          type: 'pastoral_guidance',
+          context: JSON.stringify({ purpose: 'social_media_optimization', platform: 'multi' })
+        })
+      });
+      return response.json();
+    }
+  });
+
+  const mcpSocialIntegrationMutation = useMutation({
+    mutationFn: async (data: { platforms: string[]; content: string }) => {
+      const response = await fetch('/api/mcp/social-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platforms: data.platforms,
+          content: data.content,
+          includeAnalytics: true
+        })
+      });
+      return response.json();
+    }
+  });
   
   const { toast } = useToast();
 
@@ -152,32 +199,38 @@ export default function SocialAutomation() {
   const generateContentMutation = useMutation({
     mutationFn: async (type: string) => {
       let prompt = "";
+      let aiType = "theological_analysis";
       switch (type) {
         case 'verse':
-          prompt = "Generate an inspirational Bible verse post with relevant hashtags for social media";
+          prompt = "Generate an inspirational Bible verse post with relevant hashtags for social media. Include scripture reference and theological context.";
+          aiType = "theological_analysis";
           break;
         case 'prayer':
-          prompt = "Create a short, heartfelt prayer for social media that encourages community";
+          prompt = "Create a short, heartfelt prayer for social media that encourages community and reflects biblical principles.";
+          aiType = "pastoral_counseling";
           break;
         case 'inspiration':
-          prompt = "Write an uplifting, faith-based inspirational message for social media";
+          prompt = "Write an uplifting, faith-based inspirational message for social media with theological depth and practical application.";
+          aiType = "pastoral_guidance";
           break;
         case 'sermon-clip':
-          prompt = "Create an engaging social media post promoting an upcoming sermon";
+          prompt = "Create an engaging social media post promoting an upcoming sermon with compelling theological hooks.";
+          aiType = "sermon_outline";
           break;
       }
 
       const response = await apiRequest('POST', '/api/chat', {
         message: prompt,
-        type: 'default'
+        type: aiType,
+        context: JSON.stringify({ platform: 'social_media', purpose: 'ministry_outreach' })
       });
       return response.json();
     },
     onSuccess: (data) => {
       setNewPostContent(data.response);
       toast({
-        title: "Content Generated! ✨",
-        description: "AI has created engaging social media content for you"
+        title: "OpenAI Content Generated! 🤖",
+        description: "GPT-4 powered theological content ready for your ministry"
       });
     }
   });
@@ -228,7 +281,7 @@ export default function SocialAutomation() {
           <h2 className="text-3xl font-bold text-white">Social Media Automation</h2>
         </div>
         <p className="text-gray-300 text-lg">
-          Connect accounts, schedule content, and automate daily inspirational posts across all platforms
+          Connect accounts, schedule OpenAI-powered content, and automate theological posts across all platforms
         </p>
       </div>
 
@@ -338,16 +391,28 @@ export default function SocialAutomation() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-medium text-gray-300">Post Content</label>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => generateContentMutation.mutate(postType)}
-                    disabled={generateContentMutation.isPending}
-                    className="border-purple-500/50 text-purple-400"
-                  >
-                    <Sparkles className="w-4 h-4 mr-1" />
-                    AI Generate
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateContentMutation.mutate(postType)}
+                      disabled={generateContentMutation.isPending}
+                      className="border-purple-500/50 text-purple-400"
+                    >
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      AI Generate
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => aiContentOptimizationMutation.mutate(newPostContent)}
+                      disabled={aiContentOptimizationMutation.isPending || !newPostContent.trim()}
+                      className="border-green-500/50 text-green-400"
+                    >
+                      <Zap className="w-4 h-4 mr-1" />
+                      Optimize
+                    </Button>
+                  </div>
                 </div>
                 <Textarea
                   value={newPostContent}
@@ -391,6 +456,71 @@ export default function SocialAutomation() {
                   className="bg-white/5 border-white/10 text-white"
                 />
               </div>
+
+              {/* Advanced OpenAI Features */}
+              {newPostContent.trim() && (
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <Brain className="w-5 h-5 mr-2 text-purple-400" />
+                    🤖 OpenAI Enhanced Analysis
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <Button
+                      onClick={() => theologicalAnalysisMutation.mutate(newPostContent)}
+                      disabled={theologicalAnalysisMutation.isPending}
+                      className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-400 hover:to-blue-400 text-white px-4 py-2 rounded-xl"
+                    >
+                      {theologicalAnalysisMutation.isPending ? 'Analyzing...' : '📜 Theological Check'}
+                    </Button>
+                    
+                    <Button
+                      onClick={() => mcpSocialIntegrationMutation.mutate({ platforms: selectedPlatforms, content: newPostContent })}
+                      disabled={mcpSocialIntegrationMutation.isPending || selectedPlatforms.length === 0}
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white px-4 py-2 rounded-xl"
+                    >
+                      {mcpSocialIntegrationMutation.isPending ? 'Syncing...' : '⛪ MCP Sync'}
+                    </Button>
+                  </div>
+                  
+                  {/* AI Results Display */}
+                  {(theologicalAnalysisMutation.data || aiContentOptimizationMutation.data) && (
+                    <div className="space-y-3 mb-4">
+                      {theologicalAnalysisMutation.data && (
+                        <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-400/30 rounded-xl p-4">
+                          <h5 className="font-bold text-white mb-2 flex items-center">
+                            <MessageCircle className="w-4 h-4 mr-2 text-purple-400" />
+                            Theological Analysis
+                          </h5>
+                          <p className="text-sm text-purple-200">{JSON.stringify(theologicalAnalysisMutation.data, null, 2)}</p>
+                        </div>
+                      )}
+                      
+                      {aiContentOptimizationMutation.data && (
+                        <div className="bg-gradient-to-br from-green-500/10 to-teal-500/10 border border-green-400/30 rounded-xl p-4">
+                          <h5 className="font-bold text-white mb-2 flex items-center">
+                            <Zap className="w-4 h-4 mr-2 text-green-400" />
+                            Optimized Content
+                          </h5>
+                          <Textarea
+                            value={aiContentOptimizationMutation.data.response || ''}
+                            onChange={(e) => setNewPostContent(e.target.value)}
+                            rows={3}
+                            className="text-sm bg-white/10 backdrop-blur-sm border-white/20 text-white rounded-xl"
+                          />
+                          <Button
+                            onClick={() => setNewPostContent(aiContentOptimizationMutation.data.response || newPostContent)}
+                            className="mt-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-400 hover:to-teal-400 text-white px-3 py-1 rounded-lg text-sm"
+                          >
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            Apply Optimization
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Button
                 onClick={handleSchedulePost}

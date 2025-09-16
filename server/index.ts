@@ -9,10 +9,31 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { storage } from "./storage";
 import { log, serveStatic, setupVite } from "./vite";
+import { schedulerService } from "./services/scheduler";
+import { correlationMiddleware } from "./middleware/correlation";
+import path from 'path';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(correlationMiddleware);
+// Serve generated uploads with caching headers
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+  setHeaders(res, filePath) {
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    res.setHeader('Accept-Ranges', 'bytes');
+    
+    // Set correct MIME types for audio files
+    if (filePath.endsWith('.mp3')) {
+      res.setHeader('Content-Type', 'audio/mpeg');
+    } else if (filePath.endsWith('.wav')) {
+      res.setHeader('Content-Type', 'audio/wav');
+    }
+  }
+}));
 
 // CORS
 // In production, only allow explicit origins from CORS_ORIGIN (comma-separated).
@@ -208,12 +229,119 @@ app.use((req, res, next) => {
   next();
 });
 
+async function migrateFileDataToSupabase() {
+  if (process.env.USE_SUPABASE !== 'true') return;
+  
+  try {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    
+    // Check if user data exists and migrate it
+    const usersPath = path.join(process.cwd(), 'data', 'users.json');
+    const imagesPath = path.join(process.cwd(), 'data', 'generated-images.json');
+    const audiosPath = path.join(process.cwd(), 'data', 'generated-audios.json');
+    
+    let migrated = false;
+    
+    // Migrate users first
+    try {
+      const usersData = await fs.readFile(usersPath, 'utf-8');
+      const users = JSON.parse(usersData);
+      
+      for (const user of users) {
+        try {
+          // Check if user already exists in Supabase
+          const existing = await storage.getUserByUsername(user.username);
+          if (!existing) {
+            await storage.createUser({
+              username: user.username,
+              password: user.password,
+              email: user.email || null
+            });
+            console.log(`📤 Migrated user: ${user.username}`);
+            migrated = true;
+          }
+        } catch (e) {
+          console.warn(`⚠️ Could not migrate user ${user.username}:`, e);
+        }
+      }
+    } catch (e) {
+      console.log('No users.json found or already migrated');
+    }
+    
+    // Migrate images
+    try {
+      const imagesData = await fs.readFile(imagesPath, 'utf-8');
+      const images = JSON.parse(imagesData);
+      
+      for (const image of images) {
+        try {
+          // Check if image already exists
+          const existing = await storage.getGeneratedImage(image.id);
+          if (!existing) {
+            await storage.createGeneratedImage({
+              userId: image.userId,
+              prompt: image.prompt,
+              imageUrl: image.imageUrl,
+              style: image.style || null,
+              aspectRatio: image.aspectRatio || null
+            });
+            console.log(`📤 Migrated image: ${image.prompt.substring(0, 50)}...`);
+            migrated = true;
+          }
+        } catch (e) {
+          console.warn(`⚠️ Could not migrate image ${image.id}:`, e);
+        }
+      }
+    } catch (e) {
+      console.log('No images data found or already migrated');
+    }
+    
+    // Migrate audio
+    try {
+      const audiosData = await fs.readFile(audiosPath, 'utf-8');
+      const audios = JSON.parse(audiosData);
+      
+      for (const audio of audios) {
+        try {
+          // Check if audio already exists
+          const existing = await storage.getGeneratedAudio(audio.id);
+          if (!existing) {
+            await storage.createGeneratedAudio({
+              userId: audio.userId,
+              prompt: audio.prompt,
+              audioUrl: audio.audioUrl,
+              model: audio.model,
+              format: audio.format,
+              duration: audio.duration || null
+            });
+            console.log(`📤 Migrated audio: ${audio.prompt.substring(0, 50)}...`);
+            migrated = true;
+          }
+        } catch (e) {
+          console.warn(`⚠️ Could not migrate audio ${audio.id}:`, e);
+        }
+      }
+    } catch (e) {
+      console.log('No audios data found or already migrated');
+    }
+    
+    if (migrated) {
+      console.log('🎉 Data migration to Supabase completed successfully!');
+    } else {
+      console.log('💾 No new data to migrate to Supabase');
+    }
+  } catch (e) {
+    console.error('❌ Migration failed:', e);
+  }
+}
+
 (async () => {
   // Warn about missing environment variables that affect AI/services
   const missingEnv: string[] = [];
   if (!process.env.GEMINI_API_KEY) missingEnv.push("GEMINI_API_KEY");
   if (!process.env.BIBLE_API_KEY) missingEnv.push("BIBLE_API_KEY");
-  if (!process.env.OPENAI_API_KEY) missingEnv.push("OPENAI_API_KEY");
+  if (!process.env.OPENAI_API_KEY && !process.env.OPENAI_PODCAST_API_KEY) missingEnv.push("OPENAI_API_KEY");
   if (missingEnv.length) {
     log(
       `Warning: missing env vars: ${missingEnv.join(
@@ -223,7 +351,30 @@ app.use((req, res, next) => {
     );
   }
 
+  // Initialize storage (creates tables if needed for Supabase)
+  if (typeof (storage as any).initialize === 'function') {
+    try {
+      await (storage as any).initialize();
+      console.log('✅ Storage initialized successfully');
+      
+      // Migrate existing data from file storage if this is the first Supabase run
+      await migrateFileDataToSupabase();
+    } catch (e) {
+      console.error('❌ Storage initialization failed:', e);
+      
+      // If Supabase fails, fall back to FileStorage
+      if (process.env.USE_SUPABASE === 'true') {
+        console.log('🔄 Falling back to FileStorage due to Supabase initialization failure');
+        console.log('💾 Please run setup-supabase-tables.sql in your Supabase SQL Editor to use Supabase storage');
+        console.log('⚠️ Continuing with file-based storage for now');
+        process.exit(1); // Exit so user can set up Supabase properly
+      }
+    }
+  }
+
   const server = await registerRoutes(app);
+  // Start background scheduler for social posts
+  schedulerService.start();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -247,8 +398,8 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
-  // Fix for macOS: use simple listen() format
-  server.listen(port, () => {
+  // Fix for macOS: explicitly bind to localhost
+  server.listen(port, '127.0.0.1', () => {
     log(`🚀 Divine AI Server running on http://localhost:${port}`);
     log(
       `📖 Bible API: ${
@@ -260,10 +411,11 @@ app.use((req, res, next) => {
         process.env.GEMINI_API_KEY ? "✓ Connected" : "✗ Missing"
       }`
     );
-    log(
-      `🎙️ OpenAI Audio: ${
-        process.env.OPENAI_API_KEY ? "✓ Connected" : "✗ Missing"
-      }`
-    );
+    const hasOpenAI = !!(process.env.OPENAI_PODCAST_API_KEY || process.env.OPENAI_API_KEY);
+    log(`🎙️ OpenAI Audio: ${hasOpenAI ? '✓ Connected' : '✗ Missing'}`);
+  });
+  
+  server.on('error', (err) => {
+    console.error('Server error:', err);
   });
 })();

@@ -38,7 +38,6 @@ interface Segment {
   effects: {
     fadeIn?: boolean;
     fadeOut?: boolean;
-    backgroundMusic?: string;
     musicVolume?: number;
     soundEffect?: string;
   };
@@ -465,41 +464,6 @@ export default function PodcastEditor({
                           </label>
                         </div>
                         
-                        <div>
-                          <label className="block text-xs font-bold text-pink-200 mb-1">Background Music</label>
-                          <select
-                            value={segment.effects.backgroundMusic || ''}
-                            onChange={(e) => updateSegment(segment.id, {
-                              effects: { ...segment.effects, backgroundMusic: e.target.value }
-                            })}
-                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
-                          >
-                            <option value="">None</option>
-                            {BACKGROUND_MUSIC.map(music => (
-                              <option key={music.id} value={music.id}>
-                                {music.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        
-                        {segment.effects.backgroundMusic && (
-                          <div>
-                            <label className="block text-xs font-bold text-pink-200 mb-1">
-                              Music Volume: {Math.round((segment.effects.musicVolume || 0.3) * 100)}%
-                            </label>
-                            <input
-                              type="range"
-                              min="0"
-                              max="100"
-                              value={(segment.effects.musicVolume || 0.3) * 100}
-                              onChange={(e) => updateSegment(segment.id, {
-                                effects: { ...segment.effects, musicVolume: parseInt(e.target.value) / 100 }
-                              })}
-                              className="w-full"
-                            />
-                          </div>
-                        )}
                         
                         <div>
                           <label className="block text-xs font-bold text-pink-200 mb-1">Sound Effect</label>

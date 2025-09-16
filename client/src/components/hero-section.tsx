@@ -177,7 +177,7 @@ export default function HeroSection() {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me anything about ministry, sermons, or scripture..."
-                className="flex-1 bg-white/50 border-white/30 backdrop-blur-sm rounded-2xl px-4 sm:px-6 py-3 focus:bg-white/70 transition-all"
+                className="flex-1 bg-white/50 border-white/30 backdrop-blur-sm rounded-2xl px-4 sm:px-6 py-3 focus:bg-white/70 transition-all text-gray-900 placeholder:text-gray-600"
                 data-testid="chat-input"
               />
               <Button
@@ -200,10 +200,12 @@ export default function HeroSection() {
             <h4 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Quick Actions</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { type: 'sermon_outline', text: 'Create a sermon outline on faith', icon: '📖' },
-                { type: 'semantic_search', text: 'Find verses about hope', icon: '🔍' },
-                { type: 'illustrations', text: 'Generate sermon illustrations', icon: '🎨' },
-                { type: 'pastoral_guidance', text: 'Get pastoral guidance', icon: '💡' }
+                { type: 'theological_analysis', text: 'Deep theological analysis with GPT-5', icon: '🧠' },
+                { type: 'live_prayer', text: 'Start live voice prayer session', icon: '🙏' },
+                { type: 'pastoral_counseling', text: 'AI pastoral counseling session', icon: '💝' },
+                { type: 'worship_creation', text: 'Create multi-modal worship experience', icon: '🎵' },
+                { type: 'sermon_prep', text: 'Advanced AI sermon preparation', icon: '📖' },
+                { type: 'church_integration', text: 'Sync with church calendar & systems', icon: '⛪' }
               ].map((action, index) => (
                 <button
                   key={index}

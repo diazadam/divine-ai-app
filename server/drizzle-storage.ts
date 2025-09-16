@@ -18,11 +18,14 @@ import {
   type GeneratedImage,
   generatedVideos,
   type GeneratedVideo,
+  generatedAudios,
+  type GeneratedAudio,
   voiceRecordings,
   type VoiceRecording,
   type InsertPodcast,
   type InsertGeneratedImage,
   type InsertGeneratedVideo,
+  type InsertGeneratedAudio,
   type InsertVoiceRecording,
 } from '@shared/schema';
 
@@ -192,6 +195,29 @@ export class DrizzleStorage implements IStorage {
     return rows.length > 0;
   }
 
+  async getGeneratedAudio(id: string): Promise<GeneratedAudio | undefined> {
+    const rows = await this.db.select().from(generatedAudios).where(eq(generatedAudios.id, id)).limit(1);
+    return rows[0];
+  }
+  async getGeneratedAudiosByUser(userId: string): Promise<GeneratedAudio[]> {
+    return await this.db.select().from(generatedAudios).where(eq(generatedAudios.userId, userId)).orderBy(desc(generatedAudios.createdAt));
+  }
+  async createGeneratedAudio(a: InsertGeneratedAudio & { userId: string }): Promise<GeneratedAudio> {
+    const rows = await this.db.insert(generatedAudios).values({
+      userId: a.userId,
+      prompt: a.prompt,
+      audioUrl: a.audioUrl,
+      model: (a.model as any) ?? null,
+      format: (a.format as any) ?? null,
+      duration: (a.duration as any) ?? null,
+    }).returning();
+    return rows[0]!;
+  }
+  async deleteGeneratedAudio(id: string): Promise<boolean> {
+    const rows = await this.db.delete(generatedAudios).where(eq(generatedAudios.id, id)).returning();
+    return rows.length > 0;
+  }
+
   async getVoiceRecording(id: string): Promise<VoiceRecording | undefined> {
     const rows = await this.db.select().from(voiceRecordings).where(eq(voiceRecordings.id, id)).limit(1);
     return rows[0];
@@ -223,5 +249,22 @@ export class DrizzleStorage implements IStorage {
   async deleteVoiceRecording(id: string): Promise<boolean> {
     const rows = await this.db.delete(voiceRecordings).where(eq(voiceRecordings.id, id)).returning();
     return rows.length > 0;
+  }
+
+  // Integrations - not implemented for Drizzle backend yet
+  async getIntegration(_id: string, _userId: string): Promise<any | undefined> {
+    throw new Error('Integrations not implemented for DrizzleStorage');
+  }
+  async getUserIntegrations(_userId: string): Promise<any[]> {
+    return [];
+  }
+  async createIntegration(_integration: any): Promise<any> {
+    throw new Error('Integrations not implemented for DrizzleStorage');
+  }
+  async updateIntegration(_id: string, _integration: any): Promise<any | undefined> {
+    throw new Error('Integrations not implemented for DrizzleStorage');
+  }
+  async deleteIntegration(_id: string, _userId: string): Promise<boolean> {
+    throw new Error('Integrations not implemented for DrizzleStorage');
   }
 }

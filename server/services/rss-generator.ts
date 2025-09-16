@@ -78,9 +78,9 @@ export class RSSGenerator {
       
       <!-- Audio Enclosure -->
       <enclosure 
-        url="${baseUrl}${podcast.audioUrl}"
+        url="${baseUrl}${podcast.audioUrl || ''}"
         type="audio/mpeg"
-        length="${podcast.fileSize || 1000000}"/>
+        length="${(podcast as any).fileSize || 1000000}"/>
       
       <!-- iTunes Episode Tags -->
       <itunes:author>${this.escapeXml(channel.author)}</itunes:author>
@@ -92,10 +92,10 @@ export class RSSGenerator {
       <itunes:explicit>no</itunes:explicit>
       
       <!-- Transcript if available -->
-      ${podcast.transcript ? `
+      ${(podcast as any).transcript ? `
       <content:encoded><![CDATA[
         <h2>Episode Transcript</h2>
-        <p>${this.escapeXml(podcast.transcript)}</p>
+        <p>${this.escapeXml((podcast as any).transcript)}</p>
       ]]></content:encoded>
       ` : ''}
     </item>`).join('\n')}

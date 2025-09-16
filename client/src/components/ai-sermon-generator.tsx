@@ -66,7 +66,7 @@ export default function AISermonGenerator({ onSermonGenerated }: SermonGenerator
         '/api/ai/generate-sermon-outline',
         {
           topic: params.topic,
-          scripture: '',
+          scripture: 'General biblical principles',
           audienceType: params.audience || 'general congregation',
           sermonLength: `${params.length} minutes` || '25-30 minutes',
           style: params.style || 'expository',
@@ -184,7 +184,7 @@ export default function AISermonGenerator({ onSermonGenerated }: SermonGenerator
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g., Finding Hope in Difficult Times, God's Unconditional Love..."
-              className="bg-white/5 border-white/10 text-white placeholder-gray-400"
+              className="bg-white/20 border-white/30 text-gray-900 placeholder:text-gray-600 focus:bg-white/30 focus:border-divine-400 transition-all backdrop-blur-sm"
             />
           </div>
 
@@ -200,7 +200,7 @@ export default function AISermonGenerator({ onSermonGenerated }: SermonGenerator
                   variant="outline"
                   size="sm"
                   onClick={() => setTopic(quickTopic)}
-                  className="bg-white/5 border-white/20 text-gray-300 hover:bg-white/10"
+                  className="bg-white/20 border-white/30 text-gray-100 hover:bg-white/30 hover:text-gray-900 transition-all backdrop-blur-sm"
                 >
                   {quickTopic}
                 </Button>
@@ -215,7 +215,7 @@ export default function AISermonGenerator({ onSermonGenerated }: SermonGenerator
               Generation Type
             </label>
             <Select value={generateType} onValueChange={(value: any) => setGenerateType(value)}>
-              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+              <SelectTrigger className="bg-white/20 border-white/30 text-gray-900 focus:bg-white/30 focus:border-divine-400 transition-all backdrop-blur-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -236,7 +236,7 @@ export default function AISermonGenerator({ onSermonGenerated }: SermonGenerator
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
               placeholder="e.g., Young adults, Families, New believers..."
-              className="bg-white/5 border-white/10 text-white placeholder-gray-400"
+              className="bg-white/20 border-white/30 text-gray-900 placeholder:text-gray-600 focus:bg-white/30 focus:border-divine-400 transition-all backdrop-blur-sm"
             />
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function AISermonGenerator({ onSermonGenerated }: SermonGenerator
                 <SelectValue placeholder="Regular Sunday (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Regular Sunday</SelectItem>
+                <SelectItem value="regular">Regular Sunday</SelectItem>
                 <SelectItem value="christmas">Christmas</SelectItem>
                 <SelectItem value="easter">Easter</SelectItem>
                 <SelectItem value="mothers-day">Mother's Day</SelectItem>

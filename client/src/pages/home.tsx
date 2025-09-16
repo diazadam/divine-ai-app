@@ -2,10 +2,7 @@ import { useLocation } from "wouter";
 import NavigationBar from "@/components/navigation-bar";
 import HeroSection from "@/components/hero-section";
 import MenuCarousel from "@/components/menu-carousel";
-import SermonPrepWorkspace from "@/components/sermon-prep-workspace";
-import PodcastStudio from "@/components/podcast-studio";
 import ScriptureEngine from "@/components/scripture-engine";
-import MediaCreator from "@/components/media-creator";
 
 export default function Home() {
   const [location] = useLocation();
@@ -36,10 +33,8 @@ export default function Home() {
         </>
       ) : (
         <>
-          {location === '/sermon-prep' && <SermonPrepWorkspace />}
-          {location === '/podcast-studio' && <PodcastStudio />}
+          {/* Legacy routing - these should now use dedicated pages */}
           {location === '/scripture-search' && <ScriptureEngine />}
-          {location === '/media-creator' && <MediaCreator />}
         </>
       )}
 
@@ -72,24 +67,24 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4">Features</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li>• AI Sermon Preparation</li>
-                <li>• Podcast Generation</li>
-                <li>• Scripture Search Engine</li>
-                <li>• Visual Media Creator</li>
-                <li>• Voice Recording & TTS</li>
-                <li>• Cross-Reference Engine</li>
+                <li>• Live Voice Prayer Sessions</li>
+                <li>• AI Pastoral Counseling</li>
+                <li>• Theological AI Analysis</li>
+                <li>• Multi-Modal Worship Creation</li>
+                <li>• Smart Church Integration</li>
+                <li>• Advanced Sermon Prep</li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4">Powered By</h4>
               <ul className="space-y-2 text-sm text-gray-400">
+                <li>• OpenAI GPT-5 & Realtime API</li>
+                <li>• MCP Connectors (Google, YouTube)</li>
+                <li>• Advanced Theological AI</li>
                 <li>• API.Bible (2,500+ versions)</li>
-                <li>• OpenAI GPT-4o & DALL-E</li>
-                <li>• Deepgram Speech-to-Text</li>
-                <li>• ElevenLabs Text-to-Speech</li>
-                <li>• Advanced AI Models</li>
-                <li>• Real-time Processing</li>
+                <li>• DALL-E 3 Visual Generation</li>
+                <li>• Live Voice AI Counseling</li>
               </ul>
             </div>
           </div>

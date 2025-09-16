@@ -79,83 +79,14 @@ export default function SermonHighlights() {
         transcript = "Sample transcript for demonstration...";
       }
 
-      // AI-powered highlight extraction
-      const highlightPrompt = `Analyze this sermon transcript and extract 3-5 key highlights that would work well as social media clips. For each highlight, provide:
-      1. A compelling title
-      2. The exact content/quote
-      3. Estimated timestamp
-      4. Why this would engage audiences
-      5. Suggested social platforms
-
-      Transcript: ${transcript}`;
-
-      const aiResponse = await apiRequest('POST', '/api/chat', {
-        message: highlightPrompt,
-        type: 'default'
+      // Use the dedicated highlights extraction API
+      const response = await apiRequest('POST', '/api/ai/extract-highlights', {
+        content: transcript,
+        title: params.title || 'Sermon',
+        sourceType: params.type
       });
-
-      const aiData = await aiResponse.json();
-
-      // Create structured highlights from AI response
-      const extractedHighlights: SermonHighlight[] = [
-        {
-          id: '1',
-          title: 'Hope in Dark Times',
-          content: 'Even in our darkest moments, God\'s light shines brightest. When we can\'t see the way forward, He becomes our guide.',
-          timestamp: '12:34',
-          duration: 45,
-          transcription: aiData.response.substring(0, 200) + '...',
-          socialReady: true,
-          platforms: ['instagram', 'facebook', 'twitter']
-        },
-        {
-          id: '2', 
-          title: 'Faith Over Fear',
-          content: 'Fear whispers lies, but faith speaks truth. Choose to believe what God says about you, not what circumstances suggest.',
-          timestamp: '18:22',
-          duration: 38,
-          transcription: 'Full transcription of this powerful moment about choosing faith...',
-          socialReady: true,
-          platforms: ['instagram', 'facebook']
-        },
-        {
-          id: '3',
-          title: 'Community Strength',
-          content: 'We were never meant to walk alone. In community, we find strength, encouragement, and the love of Christ.',
-          timestamp: '25:17',
-          duration: 52,
-          transcription: 'Complete transcript showing the importance of Christian community...',
-          socialReady: true,
-          platforms: ['facebook', 'twitter']
-        }
-      ];
-
-      const result: VideoProcessingResult = {
-        highlights: extractedHighlights,
-        fullTranscript: transcript,
-        keyMoments: [
-          { timestamp: '5:23', description: 'Opening prayer and introduction', importance: 0.7 },
-          { timestamp: '12:34', description: 'Main point about hope', importance: 0.95 },
-          { timestamp: '18:22', description: 'Faith over fear illustration', importance: 0.9 },
-          { timestamp: '25:17', description: 'Community emphasis', importance: 0.85 },
-          { timestamp: '32:45', description: 'Closing call to action', importance: 0.8 }
-        ],
-        suggestedClips: [
-          {
-            start: '12:20',
-            end: '13:05',
-            title: 'Hope Highlight',
-            reason: 'Powerful message about finding hope - perfect for social media'
-          },
-          {
-            start: '18:10',
-            end: '19:00',
-            title: 'Faith Declaration', 
-            reason: 'Quotable moment about faith overcoming fear'
-          }
-        ]
-      };
-
+      
+      const result = await response.json();
       return result;
     },
     onSuccess: (result) => {

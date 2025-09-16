@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +23,18 @@ import {
 import { Link } from "wouter";
 import GlassCard from "@/components/ui/glass-card";
 import { apiRequest } from "@/lib/queryClient";
-import type { GeneratedImage, GeneratedVideo } from "@shared/schema";
+import type { GeneratedImage, GeneratedVideo, GeneratedAudio } from "@shared/schema";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface StylePreset {
   id: string;
@@ -46,8 +57,13 @@ export default function MediaCreator() {
   const [selectedStyle, setSelectedStyle] = useState("cinematic");
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [quality, setQuality] = useState("high");
+  
+  const { toast } = useToast();
   const [videoDuration, setVideoDuration] = useState("5");
   const [videoStyle, setVideoStyle] = useState("cinematic");
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'image' | 'video' | 'audio'; id: string } | null>(null);
+  const [videoJobStatus, setVideoJobStatus] = useState<string>("");
+  const evtRef = useRef<EventSource | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -59,13 +75,27 @@ export default function MediaCreator() {
     queryKey: ['/api/generated-videos'],
   });
 
+  const { data: generatedAudios = [] } = useQuery<GeneratedAudio[]>({
+    queryKey: ['/api/generated-audios'],
+  });
+
   const generateImageMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/generate-image', {
-        prompt: imagePrompt,
-        style: selectedStyle,
-        aspectRatio,
-        quality,
+      const [w, h] = (() => {
+        switch (aspectRatio) {
+          case '1:1': return [1024, 1024];
+          case '4:3': return [1024, 768];
+          case '9:16': return [576, 1024];
+          default: return [1024, 576];
+        }
+      })();
+      const response = await apiRequest('POST', '/api/huggingface/generate-image', {
+        prompt: `${imagePrompt}, ${selectedStyle} style, high quality, professional, suitable for church/ministry`,
+        model: 'stabilityai/stable-diffusion-xl-base-1.0',
+        width: w,
+        height: h,
+        num_inference_steps: quality === 'ultra' ? 50 : quality === 'high' ? 35 : 25,
+        guidance_scale: quality === 'ultra' ? 8.0 : 7.5,
       });
       return response.json();
     },
@@ -76,17 +106,53 @@ export default function MediaCreator() {
 
   const generateVideoMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/generate-video', {
-        prompt: videoPrompt,
-        duration: parseInt(videoDuration),
-        style: videoStyle,
-        aspectRatio,
+      // Use job queue + SSE for progress
+      const params = {
+        prompt: `${videoPrompt}, ${videoStyle} cinematography, smooth motion, high quality`,
+        model: 'Wan-AI/Wan2.2-T2V-A14B',
+        num_frames: Math.min(parseInt(videoDuration) * 8, 64),
+        width: aspectRatio === '9:16' ? 320 : 512,
+        height: aspectRatio === '9:16' ? 512 : 320,
+      };
+      const startResp = await apiRequest('POST', '/api/jobs/start', { type: 'video', params });
+      const { jobId } = await startResp.json();
+      setVideoJobStatus('Queued');
+      return await new Promise((resolve, reject) => {
+        const es = new EventSource(`/api/jobs/stream/${jobId}`);
+        evtRef.current = es;
+        es.onmessage = (ev) => {
+          try {
+            const payload = JSON.parse(ev.data);
+            setVideoJobStatus(payload.status ?? 'running');
+            if (payload.status === 'completed') {
+              es.close();
+              resolve(payload);
+            } else if (payload.status === 'failed') {
+              es.close();
+              reject(new Error(payload.error || 'Job failed'));
+            }
+          } catch (e) {
+            // ignore malformed event
+          }
+        };
+        es.onerror = () => {
+          es.close();
+          reject(new Error('Event stream error'));
+        };
       });
-      return response.json();
     },
     onSuccess: () => {
+      setVideoJobStatus('');
       queryClient.invalidateQueries({ queryKey: ['/api/generated-videos'] });
     },
+    onError: (error) => {
+      setVideoJobStatus('');
+      toast({
+        title: "Video Generation Failed",
+        description: "Unable to generate video. Please try again.",
+        variant: "destructive"
+      });
+    }
   });
 
   const stylePresets: StylePreset[] = [
@@ -182,18 +248,82 @@ export default function MediaCreator() {
     generateVideoMutation.mutate();
   };
 
-  const handleDownloadImage = (imageUrl: string) => {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = 'divine-ai-generated-image.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadImage = (idOrUrl: string, isGenerated: boolean) => {
+    const url = isGenerated ? `/api/generated-images/${idOrUrl}/download` : idOrUrl;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
+
+  const handleDownloadVideo = (id: string) => {
+    const a = document.createElement('a');
+    a.href = `/api/generated-videos/${id}/download`;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const deleteImage = async (id: string) => {
+    const resp = await apiRequest('DELETE', `/api/generated-images/${id}`);
+    if (resp.ok) queryClient.invalidateQueries({ queryKey: ['/api/generated-images'] });
+  };
+
+  const deleteVideo = async (id: string) => {
+    const resp = await apiRequest('DELETE', `/api/generated-videos/${id}`);
+    if (resp.ok) queryClient.invalidateQueries({ queryKey: ['/api/generated-videos'] });
+  };
+
+  const handleDownloadAudio = (id: string) => {
+    const a = document.createElement('a');
+    a.href = `/api/generated-audios/${id}/download`;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const deleteAudio = async (id: string) => {
+    const resp = await apiRequest('DELETE', `/api/generated-audios/${id}`);
+    if (resp.ok) queryClient.invalidateQueries({ queryKey: ['/api/generated-audios'] });
+  };
+
+  useEffect(() => () => { evtRef.current?.close(); }, []);
 
   return (
     <section id="media" className="pt-24 pb-16 min-h-screen relative z-10" data-testid="media-creator">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. The file will be removed from your library.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  if (!deleteTarget) return;
+                  const { type, id } = deleteTarget;
+                  try {
+                    if (type === 'image') await deleteImage(id);
+                    if (type === 'video') await deleteVideo(id);
+                    if (type === 'audio') await deleteAudio(id);
+                  } finally {
+                    setDeleteTarget(null);
+                  }
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         {/* Back Button */}
         <div className="mb-6">
           <Link href="/">
@@ -344,12 +474,22 @@ export default function MediaCreator() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          onClick={() => handleDownloadImage(image.url)}
+                          onClick={() => handleDownloadImage((image as any).id || image.url, String(image.url).startsWith('/uploads/'))}
                           className="bg-white/20 p-2 rounded-lg hover:bg-white/30 transition-colors"
                           data-testid={`download-image-${image.id}`}
                         >
                           <Download className="w-4 h-4" />
                         </Button>
+                        {String(image.url).startsWith('/uploads/') && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setDeleteTarget({ type: 'image', id: (image as any).id })}
+                            className="bg-white/20 p-2 rounded-lg hover:bg-white/30 transition-colors"
+                          >
+                            Delete
+                          </Button>
+                        )}
                         <Button
                           size="icon"
                           variant="ghost"
@@ -538,10 +678,19 @@ export default function MediaCreator() {
                           size="sm"
                           variant="ghost"
                           className="text-xs"
+                          onClick={() => handleDownloadVideo(video.id)}
                           data-testid={`download-video-${video.id}`}
                         >
                           <Download className="w-3 h-3 mr-1" />
                           Download
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs text-red-300 hover:text-red-200"
+                          onClick={() => setDeleteTarget({ type: 'video', id: video.id })}
+                        >
+                          Delete
                         </Button>
                       </div>
                     </div>
@@ -566,6 +715,39 @@ export default function MediaCreator() {
               View All Generated Videos
             </Button>
           )}
+        </GlassCard>
+
+        {/* Generated Audios Gallery */}
+        <GlassCard className="p-6 premium-shadow">
+          <h3 className="text-xl font-semibold mb-6 flex items-center">
+            <Video className="text-divine-500 mr-3" />
+            Generated Audio
+          </h3>
+          <div className="space-y-3">
+            {generatedAudios.length > 0 ? (
+              generatedAudios.map((audio) => (
+                <div key={audio.id} className="bg-celestial-800/30 rounded-lg p-3 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium">{audio.prompt.substring(0, 60)}...</div>
+                    <div className="text-xs text-gray-400">{audio.model} • {audio.format?.toUpperCase?.()} {audio.duration ? `• ${audio.duration}s` : ''}</div>
+                    {audio.audioUrl && (
+                      <audio controls src={audio.audioUrl} className="mt-2 w-full" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => handleDownloadAudio(audio.id)}>
+                      <Download className="w-3 h-3 mr-1" /> Download
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-red-300 hover:text-red-200" onClick={() => setDeleteTarget({ type: 'audio', id: audio.id })}>
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-400">No audio generated yet</div>
+            )}
+          </div>
         </GlassCard>
       </div>
     </TabsContent>

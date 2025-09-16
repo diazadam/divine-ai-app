@@ -51,41 +51,19 @@ export default function SermonRepurposer() {
         transcript = transcriptData.transcription || 'Transcription not available';
       }
 
-      // Generate repurposed content for each type
-      const results: RepurposedContent[] = [];
-      
-      for (const type of params.types) {
-        try {
-          const prompt = buildRepurposePrompt(type, transcript, params.title);
-          
-          const res = await apiRequest(
-            'POST',
-            '/api/chat',
-            {
-              message: prompt,
-              type: 'default'
-            }
-          );
-          
-          const data = await res.json();
-          
-          results.push({
-            id: `${type}-${Date.now()}`,
-            type: type as any,
-            title: getContentTitle(type, params.title),
-            content: data.response,
-            metadata: {
-              wordCount: data.response.split(' ').length,
-              duration: type === 'social-clips' ? '1-2 minutes each' : undefined,
-              clipCount: type === 'social-clips' ? 3 : undefined
-            }
-          });
-        } catch (error) {
-          // Add fallback content
-          results.push(createFallbackContent(type, params.title));
+      // Generate repurposed content using the dedicated API
+      const res = await apiRequest(
+        'POST',
+        '/api/ai/repurpose-sermon',
+        {
+          content: transcript,
+          types: params.types,
+          title: params.title,
+          source: params.source
         }
-      }
-
+      );
+      
+      const results = await res.json();
       return results;
     },
     onSuccess: (results) => {

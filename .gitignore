@@ -5,9 +5,59 @@ server/public
 vite.config.ts.*
 *.tar.gz
 *.zip
+
+# Environment files - NEVER commit these
 .env
 .env.local
-uploads/audio/*
+.env.production
+.env.development
+
+# Logs
+*.log
+server_*.log
+client.log
+gradio_*.log
+tts_server.log
+dist-logs/
+
+# Test files
+test*.js
+test*.mp3
+test*.wav
+debug-*.js
+setup-*.js
+create-tables.js
+
+# Python
+*.pyc
+__pycache__/
+venv/
+venv-*/
+.venv/
+
+# Temporary files
+cookies*.txt
+user-cookies.txt
+final-cookies.txt
+fresh-cookies.txt
+*.tmp
+
+# IDE
 .replit
 .cache
 .local
+.idea/
+.vscode/
+
+# Uploads (keep directory structure but not files)
+uploads/audio/*.mp3
+uploads/audio/*.wav
+uploads/images/*.png
+uploads/images/*.jpg
+uploads/videos/*.mp4
+
+# Backup directories
+divine-podcast-backend/
+
+# Data files (generated content)
+data/

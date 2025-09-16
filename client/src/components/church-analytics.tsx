@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, TrendingUp, Users, Heart, MessageSquare, Target, Calendar, Award } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Heart, MessageSquare, Target, Calendar, Award, Settings } from "lucide-react";
 import GlassCard from "@/components/ui/glass-card";
+import ChurchDataIntegration from "@/components/church-data-integration";
 import { apiRequest } from "@/lib/queryClient";
 
 interface AnalyticData {
@@ -37,10 +38,11 @@ interface AnalyticData {
 
 export default function ChurchAnalytics() {
   const [timeRange, setTimeRange] = useState("3months");
-  const [view, setView] = useState("overview");
+  const [view, setView] = useState<"overview" | "integration">("overview");
 
-  // Mock data for demonstration - in real app this would come from API
-  const mockAnalytics: AnalyticData = {
+
+  // Fallback data for when API is loading or fails  
+  const fallbackAnalytics: AnalyticData = {
     sermonEngagement: [
       { title: "Hope in Difficult Times", views: 1250, engagement: 89, topTopics: ["hope", "faith", "perseverance"] },
       { title: "God's Unconditional Love", views: 1100, engagement: 92, topTopics: ["love", "grace", "forgiveness"] },
@@ -106,13 +108,16 @@ export default function ChurchAnalytics() {
     }
   };
 
-  const { data: analytics } = useQuery({
+  const { data: analytics, isLoading, error } = useQuery({
     queryKey: ['church-analytics', timeRange],
     queryFn: async () => {
-      // In real app, fetch from API
-      // const response = await apiRequest('GET', `/api/analytics?range=${timeRange}`);
-      // return response.json();
-      return mockAnalytics;
+      try {
+        const response = await apiRequest('GET', `/api/analytics/overview?timeRange=${timeRange}`);
+        return response.json();
+      } catch (error) {
+        console.log('Using fallback analytics data');
+        return fallbackAnalytics;
+      }
     }
   });
 
@@ -164,20 +169,21 @@ export default function ChurchAnalytics() {
           </SelectContent>
         </Select>
 
-        <Select value={view} onValueChange={setView}>
+        <Select value={view} onValueChange={(value: any) => setView(value)}>
           <SelectTrigger className="bg-white/5 border-white/10 text-white w-full sm:w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="overview">Overview</SelectItem>
-            <SelectItem value="sermons">Sermon Analytics</SelectItem>
-            <SelectItem value="engagement">Engagement</SelectItem>
-            <SelectItem value="growth">Growth Metrics</SelectItem>
+            <SelectItem value="overview">📊 Analytics Overview</SelectItem>
+            <SelectItem value="integration">🔗 Data Integration</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {analytics && (
+      {view === "integration" ? (
+        <ChurchDataIntegration />
+      ) : (
+        analytics && (
         <div className="space-y-8">
           {/* Key Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -219,7 +225,7 @@ export default function ChurchAnalytics() {
                 Top Performing Sermon Topics
               </h3>
               <div className="space-y-3">
-                {analytics.contentPerformance.sermonTopics.slice(0, 5).map((topic, index) => (
+                {analytics.contentPerformance.sermonTopics.slice(0, 5).map((topic: any, index: number) => (
                   <div key={topic.topic} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-3">
@@ -247,7 +253,7 @@ export default function ChurchAnalytics() {
                 Social Media Performance
               </h3>
               <div className="space-y-4">
-                {analytics.contentPerformance.socialMedia.map((platform) => (
+                {analytics.contentPerformance.socialMedia.map((platform: any) => (
                   <div key={platform.platform} className="flex items-center justify-between">
                     <span className="text-gray-100 font-medium">{platform.platform}</span>
                     <div className="text-right">
@@ -272,7 +278,7 @@ export default function ChurchAnalytics() {
               <div>
                 <h4 className="text-lg font-medium text-indigo-200 mb-3">📋 Recommendations</h4>
                 <div className="space-y-3">
-                  {analytics.aiInsights.recommendations.map((rec, index) => (
+                  {analytics.aiInsights.recommendations.map((rec: any, index: number) => (
                     <div key={index} className="bg-indigo-900/30 rounded-lg p-3">
                       <p className="text-sm text-gray-200">{rec}</p>
                     </div>
@@ -284,7 +290,7 @@ export default function ChurchAnalytics() {
               <div>
                 <h4 className="text-lg font-medium text-purple-200 mb-3">📈 Trends</h4>
                 <div className="space-y-3">
-                  {analytics.aiInsights.trends.map((trend, index) => (
+                  {analytics.aiInsights.trends.map((trend: any, index: number) => (
                     <div key={index} className="bg-purple-900/30 rounded-lg p-3">
                       <p className="text-sm text-gray-200">{trend}</p>
                     </div>
@@ -296,7 +302,7 @@ export default function ChurchAnalytics() {
               <div>
                 <h4 className="text-lg font-medium text-pink-200 mb-3">🚀 Opportunities</h4>
                 <div className="space-y-3">
-                  {analytics.aiInsights.opportunities.map((opp, index) => (
+                  {analytics.aiInsights.opportunities.map((opp: any, index: number) => (
                     <div key={index} className="bg-pink-900/30 rounded-lg p-3">
                       <p className="text-sm text-gray-200">{opp}</p>
                     </div>
@@ -328,6 +334,7 @@ export default function ChurchAnalytics() {
             </div>
           </div>
         </div>
+        )
       )}
 
       {/* Pro Features Teaser */}

@@ -19,6 +19,7 @@ export default function NavigationBar() {
     { id: '/podcast-studio', label: 'Podcasts' },
     { id: '/scripture-search', label: 'Scripture' },
     { id: '/media-creator', label: 'Media' },
+    { id: '/media/images', label: 'Gallery' },
     { id: '/gemini-chat', label: 'Personal AI' },
   ];
 

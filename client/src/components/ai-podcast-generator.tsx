@@ -47,7 +47,7 @@ export default function AIPodcastGenerator() {
   const [voiceSpeed, setVoiceSpeed] = useState(1.0);
   const [voiceTone, setVoiceTone] = useState("warm");
   const [includeIntroOutro, setIncludeIntroOutro] = useState(true);
-  const [addBackgroundMusic, setAddBackgroundMusic] = useState(false);
+  // Background music feature removed
   const [generatedPodcasts, setGeneratedPodcasts] = useState<PodcastEpisode[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -104,7 +104,6 @@ export default function AIPodcastGenerator() {
         speed: voiceSpeed,
         tone: voiceTone,
         includeIntroOutro,
-        addBackgroundMusic,
         title: params.title
       });
 
@@ -218,7 +217,7 @@ export default function AIPodcastGenerator() {
         speed: voiceSpeed,
         tone: voiceTone,
         introOutro: includeIntroOutro,
-        backgroundMusic: addBackgroundMusic
+        // Background music feature removed
       }
     });
   };
@@ -473,13 +472,6 @@ export default function AIPodcastGenerator() {
                 <Switch checked={includeIntroOutro} onCheckedChange={setIncludeIntroOutro} />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-sm font-medium text-gray-300">Background Music</label>
-                  <p className="text-xs text-gray-400">Subtle instrumental background</p>
-                </div>
-                <Switch checked={addBackgroundMusic} onCheckedChange={setAddBackgroundMusic} />
-              </div>
             </div>
           </div>
 

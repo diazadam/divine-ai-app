@@ -1,12 +1,19 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { elevenLabsService } from './elevenlabs';
+// Removed ElevenLabs dependency for simplicity
+import { hfTtsService } from './tts-fallback';
+import { spawn, exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export interface AudioProcessingOptions {
   noiseReduction?: boolean;
   introOutro?: boolean;
-  backgroundMusic?: boolean;
   chapterMarkers?: boolean;
+  backgroundMusic?: boolean;
+  bedKey?: string;
+  bedVolume?: number;
 }
 
 export interface AudioMetadata {
@@ -27,6 +34,8 @@ export interface TranscriptionResult {
 
 class AudioProcessorService {
   private readonly uploadDir = path.join(process.cwd(), 'uploads', 'audio');
+  private lastEngine: 'huggingface' | 'elevenlabs' = 'huggingface';
+  private lastContentType: string = 'audio/mpeg';
 
   constructor() {
     this.ensureUploadDir();
@@ -66,7 +75,7 @@ class AudioProcessorService {
         await this.addIntroOutro(audioPath);
       }
 
-      if (options.backgroundMusic) {
+      if (false) { // Background music disabled
         await this.addBackgroundMusic(audioPath);
       }
 
@@ -84,7 +93,8 @@ class AudioProcessorService {
 
   async transcribeAudio(audioPath: string): Promise<TranscriptionResult> {
     try {
-      if (!process.env.OPENAI_API_KEY) {
+      const OPENAI_KEY = process.env.OPENAI_PODCAST_API_KEY ?? process.env.OPENAI_API_KEY;
+      if (!OPENAI_KEY) {
         throw new Error('OpenAI API key not configured');
       }
 
@@ -92,7 +102,7 @@ class AudioProcessorService {
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${OPENAI_KEY}`,
         },
         body: await this.createFormData(audioPath),
       });
@@ -119,32 +129,49 @@ class AudioProcessorService {
     }
   }
 
-  async generateSpeech(text: string, voice: string, useElevenLabs = true): Promise<Buffer> {
+  async generateSpeech(text: string, voice: string, useElevenLabs = false): Promise<Buffer> {
     try {
-      // ALWAYS use ElevenLabs - no fallback
-      if (!elevenLabsService.isConfigured()) {
-        throw new Error('ElevenLabs API is not configured. Please set ELEVENLABS_API_KEY environment variable.');
-      }
-      
-      console.log(`🎙️ Generating speech with ElevenLabs voice: ${voice}`);
-      return await this.generateSpeechElevenLabs(text, voice);
+      // ElevenLabs path disabled
+      throw new Error('ElevenLabs disabled - use OpenAI TTS instead');
     } catch (error) {
-      console.error('Error generating speech with ElevenLabs:', error);
-      throw new Error(`Failed to generate speech with ElevenLabs: ${error}`);
+      console.warn('Primary TTS failed, attempting HuggingFace fallback:', error);
+      if (!hfTtsService.isConfigured()) {
+        throw new Error(`Failed TTS and no HuggingFace fallback configured: ${error}`);
+      }
+      const out = await hfTtsService.synthesize(text);
+      this.lastEngine = 'huggingface';
+      this.lastContentType = 'audio/mpeg'; // Force MP3 for consistency
+      return out.buffer;
     }
   }
 
-  private async generateSpeechOpenAI(text: string, voice = 'alloy'): Promise<Buffer> {
+  async generateSpeechWithSettings(text: string, voiceId: string, settings: { stability?: number; similarity_boost?: number; style?: number; use_speaker_boost?: boolean; }): Promise<Buffer> {
+    try {
+      // ElevenLabs path disabled
+      throw new Error('ElevenLabs disabled - use OpenAI TTS instead');
+    } catch (err) {
+      console.warn('ElevenLabs generateSpeechWithSettings failed, using HuggingFace fallback:', err);
+      if (!hfTtsService.isConfigured()) throw err;
+      const out = await hfTtsService.synthesize(text);
+      this.lastEngine = 'huggingface';
+      this.lastContentType = 'audio/mpeg'; // Force MP3 for consistency
+      return out.buffer;
+    }
+  }
+
+  async generateSpeechOpenAI(text: string, voice = 'alloy', speed: number = 1.0): Promise<Buffer> {
+    const OPENAI_KEY = process.env.OPENAI_PODCAST_API_KEY ?? process.env.OPENAI_API_KEY;
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
+        model: 'tts-1-hd', // Use HD model for better quality
         input: text,
         voice: voice,
+        speed: speed
       }),
     });
 
@@ -155,17 +182,87 @@ class AudioProcessorService {
     return Buffer.from(await response.arrayBuffer());
   }
 
-  private async generateSpeechElevenLabs(text: string, voiceId: string): Promise<Buffer> {
-    // Use premium voice settings for best quality
-    const voiceSettings = {
-      stability: 0.5,
-      similarity_boost: 0.75,
-      style: 0.5,
-      use_speaker_boost: true
-    };
-
-    return await elevenLabsService.generateSpeech(text, voiceId, voiceSettings);
+  /**
+   * Create a short silence gap by generating an ultra-short TTS of a space.
+   * Note: This is a pragmatic approach to avoid ffmpeg; durationSeconds is approximate.
+   */
+  async createSilence(durationSeconds: number = 0.6): Promise<Buffer> {
+    // Generate a short silent-ish mp3 chunk and repeat to approximate duration
+    const chunk = await this.generateSpeechOpenAI(' ', 'alloy', 3.0);
+    if (durationSeconds <= 0.35) return chunk;
+    const repeats = Math.max(1, Math.min(6, Math.ceil(durationSeconds / 0.35)));
+    const parts: Buffer[] = [];
+    for (let i = 0; i < repeats; i++) parts.push(chunk);
+    return Buffer.concat(parts);
   }
+
+  async hasFfmpeg(): Promise<boolean> {
+    try {
+      await execAsync('ffmpeg -version');
+      return true;
+    } catch {
+      console.warn('⚠️ ffmpeg not found. Skipping mixing step.');
+      return false;
+    }
+  }
+
+  /**
+   * Mix a speech track with a background music bed using ffmpeg.
+   * Applies light EQ, normalization and compression to speech, and low-volume bed.
+   */
+  async mixWithBackground({
+    speechPath,
+    bedPath,
+    outputPath,
+    bedVolume = 0.07,
+  }: {
+    speechPath: string;
+    bedPath: string;
+    outputPath: string;
+    bedVolume?: number; // 0.0 - 1.0 (we clamp to safe range)
+  }): Promise<void> {
+    if (!(await this.hasFfmpeg())) {
+      // Fallback: copy speech to output if ffmpeg missing
+      await fs.copyFile(speechPath, outputPath);
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      // Loop the bed to ensure it covers the speech length; stop at shortest
+      // Clamp volume to a safe, subtle range (1% - 20%)
+      const vol = Math.max(0.01, Math.min(0.2, Number.isFinite(bedVolume) ? bedVolume : 0.07));
+
+      const args = [
+        '-y',
+        '-stream_loop', '-1', '-i', bedPath,
+        '-i', speechPath,
+        '-filter_complex',
+        // 0:a = bed, 1:a = speech
+        // Process speech, set bed low, then mix. Keep duration to shortest (speech)
+        `[1:a]highpass=f=80,lowpass=f=12000,loudnorm=I=-16:TP=-1.5:LRA=11,acompressor=threshold=-20dB:ratio=2:attack=5:release=50[vocal];` +
+        `[0:a]volume=${vol.toFixed(2)}[bg];` +
+        '[vocal][bg]amix=inputs=2:duration=shortest:dropout_transition=2, dynaudnorm=f=150:g=10[final]',
+        '-map', '[final]',
+        '-c:a', 'libmp3lame',
+        '-b:a', '160k',
+        '-ar', '44100',
+        '-shortest',
+        outputPath,
+      ];
+
+      const ff = spawn('ffmpeg', args);
+      let stderr = '';
+      ff.stderr.on('data', d => { stderr += d.toString(); });
+      ff.on('close', code => {
+        if (code === 0) return resolve();
+        reject(new Error(`ffmpeg failed (${code}): ${stderr.split('\n').slice(-4).join('\n')}`));
+      });
+      ff.on('error', reject);
+    });
+  }
+
+  getLastEngine(): 'huggingface' | 'elevenlabs' { return this.lastEngine; }
+  getLastContentType(): string { return this.lastContentType; }
 
   private async getAudioMetadata(audioPath: string): Promise<AudioMetadata> {
     // In production, use a library like node-ffprobe or similar

@@ -1,18 +1,22 @@
 import {
     type GeneratedImage,
     type GeneratedVideo,
+    type GeneratedAudio,
     type InsertGeneratedImage,
     type InsertGeneratedVideo,
+    type InsertGeneratedAudio,
     type InsertPodcast,
     type InsertScriptureCollection,
     type InsertSermon,
     type InsertUser,
     type InsertVoiceRecording,
+    type InsertIntegration,
     type Podcast,
     type ScriptureCollection,
     type Sermon,
     type User,
-    type VoiceRecording
+    type VoiceRecording,
+    type Integration
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -55,12 +59,25 @@ export interface IStorage {
   createGeneratedVideo(video: InsertGeneratedVideo & { userId: string }): Promise<GeneratedVideo>;
   deleteGeneratedVideo(id: string): Promise<boolean>;
 
+  // Generated audio methods
+  getGeneratedAudio(id: string): Promise<GeneratedAudio | undefined>;
+  getGeneratedAudiosByUser(userId: string): Promise<GeneratedAudio[]>;
+  createGeneratedAudio(audio: InsertGeneratedAudio & { userId: string }): Promise<GeneratedAudio>;
+  deleteGeneratedAudio(id: string): Promise<boolean>;
+
   // Voice recording methods
   getVoiceRecording(id: string): Promise<VoiceRecording | undefined>;
   getVoiceRecordingsByUser(userId: string): Promise<VoiceRecording[]>;
   createVoiceRecording(recording: InsertVoiceRecording & { userId: string }): Promise<VoiceRecording>;
   updateVoiceRecording(id: string, recording: Partial<InsertVoiceRecording>): Promise<VoiceRecording | undefined>;
   deleteVoiceRecording(id: string): Promise<boolean>;
+
+  // Integration methods
+  getIntegration(id: string, userId: string): Promise<Integration | undefined>;
+  getUserIntegrations(userId: string): Promise<Integration[]>;
+  createIntegration(integration: InsertIntegration & { userId: string }): Promise<Integration>;
+  updateIntegration(id: string, integration: Partial<InsertIntegration>): Promise<Integration | undefined>;
+  deleteIntegration(id: string, userId: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -70,7 +87,9 @@ export class MemStorage implements IStorage {
   private scriptureCollections: Map<string, ScriptureCollection> = new Map();
   private generatedImages: Map<string, GeneratedImage> = new Map();
   private generatedVideos: Map<string, GeneratedVideo> = new Map();
+  private generatedAudios: Map<string, GeneratedAudio> = new Map();
   private voiceRecordings: Map<string, VoiceRecording> = new Map();
+  private integrations: Map<string, Integration> = new Map();
 
   // User methods
   async getUser(id: string): Promise<User | undefined> {
@@ -162,6 +181,7 @@ export class MemStorage implements IStorage {
       title: podcastData.title,
       description: podcastData.description ?? null,
       audioUrl: podcastData.audioUrl ?? null,
+      transcript: (podcastData as any).transcript ?? null,
       duration: podcastData.duration ?? null,
       // If we already have an audioUrl (uploaded/processed), mark as completed; otherwise processing
       status: (podcastData.audioUrl ?? null) ? 'completed' : 'processing',
@@ -290,6 +310,35 @@ export class MemStorage implements IStorage {
     return this.generatedVideos.delete(id);
   }
 
+  // Generated audio methods
+  async getGeneratedAudio(id: string): Promise<GeneratedAudio | undefined> {
+    return this.generatedAudios.get(id);
+  }
+
+  async getGeneratedAudiosByUser(userId: string): Promise<GeneratedAudio[]> {
+    return Array.from(this.generatedAudios.values()).filter(audio => audio.userId === userId);
+  }
+
+  async createGeneratedAudio(audioData: InsertGeneratedAudio & { userId: string }): Promise<GeneratedAudio> {
+    const id = randomUUID();
+    const audio: GeneratedAudio = {
+      id,
+      userId: audioData.userId,
+      prompt: audioData.prompt,
+      audioUrl: audioData.audioUrl,
+      model: (audioData.model as any) ?? null,
+      format: (audioData.format as any) ?? null,
+      duration: audioData.duration ?? null,
+      createdAt: new Date(),
+    } as any;
+    this.generatedAudios.set(id, audio);
+    return audio;
+  }
+
+  async deleteGeneratedAudio(id: string): Promise<boolean> {
+    return this.generatedAudios.delete(id);
+  }
+
   // Voice recording methods
   async getVoiceRecording(id: string): Promise<VoiceRecording | undefined> {
     return this.voiceRecordings.get(id);
@@ -330,21 +379,107 @@ export class MemStorage implements IStorage {
   async deleteVoiceRecording(id: string): Promise<boolean> {
     return this.voiceRecordings.delete(id);
   }
+
+  // Integration methods
+  async getIntegration(id: string, userId: string): Promise<Integration | undefined> {
+    const integration = this.integrations.get(id);
+    return integration?.userId === userId ? integration : undefined;
+  }
+
+  async getUserIntegrations(userId: string): Promise<Integration[]> {
+    return Array.from(this.integrations.values()).filter(integration => integration.userId === userId);
+  }
+
+  async createIntegration(integrationData: InsertIntegration & { userId: string }): Promise<Integration> {
+    const id = randomUUID();
+    const integration: Integration = {
+      id,
+      userId: integrationData.userId,
+      type: integrationData.type,
+      name: integrationData.name,
+      status: integrationData.status ?? 'connected',
+      credentials: integrationData.credentials ?? null,
+      settings: integrationData.settings ?? null,
+      dataTypes: integrationData.dataTypes ?? null,
+      lastSync: integrationData.lastSync ?? null,
+      syncFrequency: integrationData.syncFrequency ?? 'daily',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.integrations.set(id, integration);
+    return integration;
+  }
+
+  async updateIntegration(id: string, integrationData: Partial<InsertIntegration>): Promise<Integration | undefined> {
+    const integration = this.integrations.get(id);
+    if (!integration) return undefined;
+    
+    const updatedIntegration: Integration = {
+      ...integration,
+      type: integrationData.type ?? integration.type,
+      name: integrationData.name ?? integration.name,
+      status: integrationData.status ?? integration.status,
+      credentials: integrationData.credentials ?? integration.credentials,
+      settings: integrationData.settings ?? integration.settings,
+      dataTypes: integrationData.dataTypes ?? integration.dataTypes,
+      lastSync: integrationData.lastSync ?? integration.lastSync,
+      syncFrequency: integrationData.syncFrequency ?? integration.syncFrequency,
+      updatedAt: new Date(),
+    };
+    this.integrations.set(id, updatedIntegration);
+    return updatedIntegration;
+  }
+
+  async deleteIntegration(id: string, userId: string): Promise<boolean> {
+    const integration = this.integrations.get(id);
+    if (!integration || integration.userId !== userId) return false;
+    return this.integrations.delete(id);
+  }
 }
 
 import { DrizzleStorage } from './drizzle-storage';
+import { SupabaseStorage } from './supabase-storage';
+import { FileStorage } from "./file-storage";
 
 let storageImpl: IStorage;
-if (process.env.USE_DB === 'true' && process.env.DATABASE_URL) {
+
+// Priority: Supabase > Drizzle > FileStorage
+if (process.env.USE_SUPABASE === 'true') {
+  storageImpl = new SupabaseStorage();
+  console.log('🗄️ Using Supabase for persistent cloud storage!');
+} else if (process.env.USE_DB === 'true' && process.env.DATABASE_URL) {
   try {
     storageImpl = new DrizzleStorage();
     console.log('Using DrizzleStorage (database-backed) for sermons and collections');
   } catch (e) {
-    console.warn('Falling back to MemStorage due to DB init error:', e);
-    storageImpl = new MemStorage();
+    console.warn('Falling back to FileStorage due to DB init error:', e);
+    storageImpl = new FileStorage();
   }
 } else {
-  storageImpl = new MemStorage();
+  storageImpl = new FileStorage();
+  console.log('💾 Using persistent file-based storage - your content will survive server restarts!');
 }
 
 export const storage = storageImpl;
+
+// Re-export shared types so other storage backends can import from './storage'
+export type {
+  GeneratedImage,
+  GeneratedVideo,
+  GeneratedAudio,
+  InsertGeneratedImage,
+  InsertGeneratedVideo,
+  InsertGeneratedAudio,
+  InsertPodcast,
+  InsertScriptureCollection,
+  InsertSermon,
+  InsertUser,
+  InsertVoiceRecording,
+  InsertIntegration,
+  Podcast,
+  ScriptureCollection,
+  Sermon,
+  User,
+  VoiceRecording,
+  Integration,
+} from '@shared/schema';

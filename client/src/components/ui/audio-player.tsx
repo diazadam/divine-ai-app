@@ -98,27 +98,52 @@ export function AudioPlayer({
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
+    const handleError = (e: Event) => {
+      console.error('Audio playback error:', e);
+      setIsPlaying(false);
+      // Try to reload the audio
+      setTimeout(() => {
+        if (audio) {
+          audio.load();
+        }
+      }, 1000);
+    };
+    const handleCanPlay = () => {
+      console.log('Audio can play - format supported');
+    };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', () => setIsPlaying(false));
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('canplay', handleCanPlay);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', () => setIsPlaying(false));
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('canplay', handleCanPlay);
     };
   }, []);
 
-  const togglePlayPause = () => {
+  const togglePlayPause = async () => {
     if (!audioRef.current) return;
     
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Playback failed:', error);
+      setIsPlaying(false);
+      // Show user-friendly error message
+      alert('Audio playback failed. The file may be corrupted or in an unsupported format.');
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleSeek = (value: number[]) => {
@@ -187,7 +212,12 @@ export function AudioPlayer({
 
   return (
     <div className={`bg-gradient-to-br from-purple-900/95 via-pink-900/95 to-indigo-900/95 backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-white/20 ${className} ${isFullscreen ? 'fixed inset-0 z-50 m-4' : ''}`}>
-      <audio ref={audioRef} src={audioUrl} />
+      <audio 
+        ref={audioRef} 
+        src={audioUrl} 
+        preload="metadata"
+        crossOrigin="anonymous"
+      />
       
       {/* Header */}
       <div className="flex items-start justify-between mb-6">

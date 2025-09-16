@@ -11,6 +11,15 @@ services:
       # Add your API keys here or use .env file
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+      - HF_TEXT_MODEL=${HF_TEXT_MODEL}
+      - HF_EMOTION_MODEL=${HF_EMOTION_MODEL}
+      - HF_EMBEDDING_MODEL=${HF_EMBEDDING_MODEL}
+      - HF_ASR_MODEL=${HF_ASR_MODEL}
+      - HF_TTS_MODEL=${HF_TTS_MODEL}
+      - HF_SAFETY_MODEL=${HF_SAFETY_MODEL}
+      - REDIS_URL=${REDIS_URL}
       - BIBLE_API_KEY=${BIBLE_API_KEY}
     volumes:
       - ./uploads:/app/uploads

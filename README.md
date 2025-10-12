@@ -1,8 +1,4 @@
 ---
-title: Divine AI — The Faith‑Driven Creative Studio
-description: Podcasting · Writing · Art Generation · Bible Study — Faith • Creativity • Innovation • Purpose
-layout: default
----
 
 <p align="center">
   <img src="./attached_assets/divine-ai-banner.png" alt="Divine AI Banner" style="max-width: 100%; border-radius: 8px;" />
